@@ -34,7 +34,7 @@ export default function PackageHero({ packageData }: PackageHeroProps) {
               })
             }}
           >
-            Scroll to Purchase
+            Scroll to Apply
           </Button>
         </div>
       </div>

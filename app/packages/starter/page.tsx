@@ -1,51 +1,61 @@
-import Header from "@/components/header"
-import Footer from "@/components/footer"
-import PackageHero from "@/components/package-hero"
-import PackageFeatures from "@/components/package-features"
-import PackageFAQ from "@/components/package-faq"
-import PurchaseSection from "@/components/purchase-section"
-import PaymentFAQ from "@/components/payment-faq"
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import PackageHero from "@/components/package-hero";
+import PackageFeatures from "@/components/package-features";
+import PackageFAQ from "@/components/package-faq";
+import PurchaseSection from "@/components/purchase-section";
+import PaymentFAQ from "@/components/payment-faq";
 
 export default function StarterPackage() {
   const packageData = {
     name: "Starter Package",
-    price: "$500",
+    price: "$1,000",
     subtitle: "Perfect for new trainers getting started",
-    description: "Get your fitness business online with a professional website and essential booking features.",
+    description:
+      "Get your fitness business online with a professional website and essential booking features.",
     features: [
       {
-        title: "Responsive Landing Page",
-        description: "Mobile-friendly website that looks great on all devices",
+        title: "Setup Cost: $1,000",
+        description:
+          "One-time setup fee includes design, development, and initial configuration",
       },
       {
-        title: "Simple Scheduling Form",
-        description: "Easy-to-use contact form for client inquiries and basic scheduling",
+        title: "Monthly Cost: $150",
+        description: "Includes hosting, maintenance, bug fixes, and support",
       },
       {
-        title: "Basic Contact Integration",
-        description: "Email notifications and contact management system",
+        title: "Max Clients: 10",
+        description:
+          "Perfect for trainers just starting out or with a small client base",
       },
       {
-        title: "Professional Design",
-        description: "Custom design that reflects your brand and builds trust",
+        title: "Scheduling & Payments",
+        description: "Full booking system with Stripe payment integration",
       },
       {
-        title: "Basic SEO Setup",
-        description: "Search engine optimization to help clients find you online",
+        title: "Client Dashboard",
+        description:
+          "Dedicated portal for clients to book sessions and track progress",
       },
       {
-        title: "1 Month Support",
-        description: "Basic support and minor updates for the first month",
+        title: "Email Support",
+        description: "Priority email support for any questions or issues",
+      },
+      {
+        title: "Backend Maintenance",
+        description: "We handle all technical maintenance and updates",
       },
     ],
     faqs: [
       {
         question: "How long does it take to build?",
-        answer: "The Starter package typically takes 1-2 weeks to complete, depending on content and feedback cycles.",
+        answer:
+          "The Starter package typically takes 1-2 weeks to complete, depending on content and feedback cycles.",
       },
       {
         question: "Can I upgrade later?",
-        answer: "You can upgrade to Pro or Elite at any time. We'll credit your Starter investment toward the upgrade.",
+        answer:
+          "You can upgrade to Pro or Elite at any time. We'll credit your Starter investment toward the upgrade.",
       },
       {
         question: "Do I need to provide content?",
@@ -54,28 +64,34 @@ export default function StarterPackage() {
       },
       {
         question: "Is hosting included?",
-        answer: "The first year of hosting is included. After that, hosting costs approximately $10-15/month.",
+        answer:
+          "The first year of hosting is included. After that, hosting costs approximately $10-15/month.",
       },
     ],
-  }
+  };
 
   const keyFeatures = [
-    "Professional responsive website design",
-    "Scheduling form integration for client bookings",
-    "Basic SEO optimization for online visibility",
-    "Professional branding and custom design",
-    "1 month of support and minor updates",
-  ]
+    "Setup Cost: $1,000 + Monthly: $150",
+    "Max 10 clients with full scheduling & payments",
+    "Client dashboard and booking system",
+    "Email support and backend maintenance",
+    "Professional design and mobile optimization",
+  ];
 
   return (
     <main className="min-h-screen bg-black text-white">
       <Header />
       <PackageHero packageData={packageData} />
       <PackageFeatures features={packageData.features} />
-      <PurchaseSection packageName="Starter Package" price="$500" keyFeatures={keyFeatures} packageSlug="starter" />
+      <PurchaseSection
+        packageName="Starter Package"
+        price="$1,000"
+        keyFeatures={keyFeatures}
+        packageSlug="starter"
+      />
       <PaymentFAQ />
       <PackageFAQ faqs={packageData.faqs} />
       <Footer />
     </main>
-  )
+  );
 }

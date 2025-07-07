@@ -1,20 +1,21 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Menu, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
-    { name: "Home", href: "#home" },
-    { name: "About", href: "#about" },
-    { name: "Packages", href: "#packages" },
-    { name: "Testimonials", href: "#testimonials" },
-    { name: "Portfolio", href: "#portfolio" },
-    { name: "Contact", href: "#contact" },
-  ]
+    { name: "Home", href: "/#home" },
+    { name: "About", href: "/#about" },
+    { name: "Packages", href: "/#packages" },
+    { name: "Testimonials", href: "/#testimonials" },
+    { name: "Portfolio", href: "/#portfolio" },
+    { name: "Contact", href: "/#contact" },
+    { name: "Status", href: "/status" },
+  ];
 
   return (
     <header className="fixed top-0 w-full bg-black/90 backdrop-blur-sm z-50 border-b border-gray-800">
@@ -65,5 +66,5 @@ export default function Header() {
         )}
       </div>
     </header>
-  )
+  );
 }

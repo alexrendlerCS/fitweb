@@ -1,97 +1,107 @@
-import Header from "@/components/header"
-import Footer from "@/components/footer"
-import PackageHero from "@/components/package-hero"
-import PackageFeatures from "@/components/package-features"
-import PackageFAQ from "@/components/package-faq"
-import PurchaseSection from "@/components/purchase-section"
-import PaymentFAQ from "@/components/payment-faq"
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import PackageHero from "@/components/package-hero";
+import PackageFeatures from "@/components/package-features";
+import PackageFAQ from "@/components/package-faq";
+import PurchaseSection from "@/components/purchase-section";
+import PaymentFAQ from "@/components/payment-faq";
 
 export default function ProPackage() {
   const packageData = {
     name: "Pro Package",
-    price: "$1,200",
+    price: "$1,250",
     subtitle: "Everything you need to run your fitness business",
-    description: "Complete business solution with payments, client management, and advanced scheduling.",
+    description:
+      "Complete business solution with payments, client management, and advanced scheduling.",
     features: [
+      {
+        title: "Setup Cost: $1,250",
+        description:
+          "One-time setup fee includes all Pro features and configuration",
+      },
+      {
+        title: "Monthly Cost: $175",
+        description:
+          "Includes hosting, maintenance, and higher priority support",
+      },
+      {
+        title: "Max Clients: 15",
+        description:
+          "Perfect for established trainers with growing client base",
+      },
       {
         title: "All Starter Features",
         description: "Everything included in the Starter package",
       },
       {
-        title: "Stripe Payment Integration",
-        description: "Secure online payments with automatic invoicing and receipts",
+        title: "Bulk Email Integration",
+        description:
+          "Send newsletters and announcements to all clients at once",
       },
       {
-        title: "Admin Dashboard",
-        description: "Comprehensive dashboard to manage clients, bookings, and payments",
+        title: "3 Preset Analytics Widgets",
+        description: "Track revenue, bookings, and client engagement",
       },
       {
-        title: "Client Dashboard",
-        description: "Dedicated portal for clients to book sessions, view progress, and make payments",
+        title: "Higher Priority Support",
+        description: "Faster response times and dedicated support channel",
       },
       {
-        title: "Google Calendar Sync",
-        description: "Two-way sync with your Google Calendar for seamless scheduling",
-      },
-      {
-        title: "Workout Tracking",
-        description: "Tools for clients to log workouts and track progress",
-      },
-      {
-        title: "Progress Photos",
-        description: "Secure photo upload and progress tracking system",
-      },
-      {
-        title: "Email Notifications",
-        description: "Automated reminders and confirmations for appointments",
-      },
-      {
-        title: "3 Months Support",
-        description: "Extended support and training on how to use your new platform",
+        title: "Advanced Scheduling",
+        description: "Recurring bookings, package deals, and calendar sync",
       },
     ],
     faqs: [
       {
         question: "How long does the Pro package take?",
-        answer: "The Pro package typically takes 3-4 weeks to complete, including payment setup and testing.",
+        answer:
+          "The Pro package typically takes 3-4 weeks to complete, including payment setup and testing.",
       },
       {
         question: "What payment methods are supported?",
-        answer: "Through Stripe, you can accept all major credit cards, Apple Pay, Google Pay, and bank transfers.",
+        answer:
+          "Through Stripe, you can accept all major credit cards, Apple Pay, Google Pay, and bank transfers.",
       },
       {
         question: "Can clients book recurring sessions?",
-        answer: "Yes! The Pro package includes recurring booking functionality and package deals.",
+        answer:
+          "Yes! The Pro package includes recurring booking functionality and package deals.",
       },
       {
         question: "Is there a transaction fee?",
-        answer: "Stripe charges 2.9% + 30¢ per transaction. There are no additional fees from me.",
+        answer:
+          "Stripe charges 2.9% + 30¢ per transaction. There are no additional fees from me.",
       },
       {
         question: "Can I customize the client dashboard?",
-        answer: "Yes, the dashboard can be customized with your branding and specific features you need.",
+        answer:
+          "Yes, the dashboard can be customized with your branding and specific features you need.",
       },
     ],
-  }
+  };
 
   const keyFeatures = [
-    "Complete business platform with all Starter features",
-    "Stripe payment integration with automatic invoicing",
-    "Admin & client dashboards for full management",
-    "Google Calendar sync for seamless scheduling",
-    "Workout tracking and progress photo uploads",
-    "3 months of dedicated support and training",
-  ]
+    "Setup Cost: $1,250 + Monthly: $175",
+    "Max 15 clients with advanced features",
+    "Bulk email integration and analytics",
+    "Higher priority support and maintenance",
+    "All Starter features included",
+  ];
 
   return (
     <main className="min-h-screen bg-black text-white">
       <Header />
       <PackageHero packageData={packageData} />
       <PackageFeatures features={packageData.features} />
-      <PurchaseSection packageName="Pro Package" price="$1,200" keyFeatures={keyFeatures} packageSlug="pro" />
+      <PurchaseSection
+        packageName="Pro Package"
+        price="$1,250"
+        keyFeatures={keyFeatures}
+        packageSlug="pro"
+      />
       <PaymentFAQ />
       <PackageFAQ faqs={packageData.faqs} />
       <Footer />
     </main>
-  )
+  );
 }
