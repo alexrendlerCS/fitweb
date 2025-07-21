@@ -205,19 +205,19 @@ export default function TrainerApplicationForm({
                   value="starter"
                   className="text-white hover:bg-gray-700"
                 >
-                  Starter - $1,000 setup + $150/month
+                  Starter - $1,000 setup + $150+/month (up to 5 clients)
                 </SelectItem>
                 <SelectItem
                   value="pro"
                   className="text-white hover:bg-gray-700"
                 >
-                  Pro - $1,250 setup + $175/month
+                  Pro - $1,250 setup + $175+/month (up to 10 clients)
                 </SelectItem>
                 <SelectItem
                   value="elite"
                   className="text-white hover:bg-gray-700"
                 >
-                  Elite - $1,750+ setup + $200-300/month
+                  Elite - $1,750+ setup + $200+/month (unlimited clients)
                 </SelectItem>
               </SelectContent>
             </Select>

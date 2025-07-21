@@ -10,9 +10,9 @@ export default function ElitePackage() {
   const packageData = {
     name: "Elite Package",
     price: "$1,750+",
-    subtitle: "Advanced automation and AI tools",
+    subtitle: "For established trainers with a larger, expanding client base",
     description:
-      "Enterprise-level solution with AI automation, multi-trainer support, and dedicated ongoing support.",
+      "Designed for established trainers with a larger client base looking to expand, including support for multiple trainers and locations, advanced customization, and dedicated ongoing support.",
     features: [
       {
         title: "Setup Cost: $1,750+",
@@ -20,41 +20,40 @@ export default function ElitePackage() {
           "Custom setup fee based on specific requirements and features",
       },
       {
-        title: "Monthly Cost: $200-300",
-        description: "Scales with your business size and feature requirements",
+        title: "Monthly Cost: $200+",
+        description: "Base price scales with your business size and feature requirements. Add-ons available for additional monthly cost.",
       },
       {
-        title: "Client Cap: 20+",
-        description: "Unlimited potential for established businesses",
+        title: "Max Clients: Unlimited",
+        description: "Unlimited potential for established trainers and their teams",
       },
       {
         title: "All Pro Features",
         description: "Everything included in the Pro package",
       },
       {
-        title: "Editable Homepage",
-        description: "Customize photos, about section, and branding elements",
+        title: "Editable Homepage (Customize Photos, About, Branding)",
+        description: "Full control over homepage content and branding",
       },
       {
-        title: "SEO Setup",
-        description:
-          "Professional search engine optimization for better visibility",
+        title: "Top Priority Support (Direct Access to Dev Team, Feature Requests)",
+        description: "Direct access to the development team and priority feature requests",
       },
       {
-        title: "Ad Tracking",
-        description: "Track marketing campaigns and ROI if requested",
+        title: "Custom Analytics Dashboard (Fully Customizable, By Request)",
+        description: "Fully customizable analytics and reporting dashboard, by request",
       },
       {
-        title: "Top Priority Support",
-        description: "Direct access to development team and feature requests",
+        title: "Multi-Trainer and Multi-Location Support",
+        description: "Manage multiple trainers and business locations",
       },
       {
-        title: "Custom Analytics Dashboard",
-        description: "Fully customizable analytics and reporting",
+        title: "Ongoing Strategy Calls, Feature Updates, Bug Fixes",
+        description: "Regular check-ins for feature updates and business strategy",
       },
       {
-        title: "Feature Requests",
-        description: "Priority consideration for new feature development",
+        title: "Unlimited Packages per Session Type",
+        description: "Offer unlimited packages for each session type",
       },
     ],
     faqs: [
@@ -92,11 +91,13 @@ export default function ElitePackage() {
   };
 
   const keyFeatures = [
-    "Setup Cost: $1,750+ + Monthly: $200-300",
-    "20+ clients with unlimited potential",
-    "Editable homepage and SEO optimization",
-    "Top priority support and feature requests",
-    "Custom analytics dashboard",
+    "Setup Cost: $1,750+ + Monthly: $200+",
+    "Unlimited clients and advanced customization",
+    "Editable homepage and top priority support",
+    "Custom analytics dashboard (by request)",
+    "Multi-trainer and multi-location support",
+    "Ongoing strategy calls, feature updates, bug fixes",
+    "Unlimited packages per session type",
   ];
 
   return (

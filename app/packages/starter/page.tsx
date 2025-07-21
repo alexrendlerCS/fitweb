@@ -10,9 +10,9 @@ export default function StarterPackage() {
   const packageData = {
     name: "Starter Package",
     price: "$1,000",
-    subtitle: "Perfect for new trainers getting started",
+    subtitle: "Perfect for new trainers or those with a small client base",
     description:
-      "Get your fitness business online with a professional website and essential booking features.",
+      "Get your fitness business online with a professional website, essential booking features, and support for up to 5 clients.",
     features: [
       {
         title: "Setup Cost: $1,000",
@@ -20,16 +20,16 @@ export default function StarterPackage() {
           "One-time setup fee includes design, development, and initial configuration",
       },
       {
-        title: "Monthly Cost: $150",
-        description: "Includes hosting, maintenance, bug fixes, and support",
+        title: "Monthly Cost: $150+",
+        description: "Base price includes hosting, maintenance, bug fixes, and support. Add-ons available for additional monthly cost.",
       },
       {
-        title: "Max Clients: 10",
+        title: "Max Clients: 5",
         description:
           "Perfect for trainers just starting out or with a small client base",
       },
       {
-        title: "Scheduling & Payments",
+        title: "Scheduling & Payments (Stripe integration)",
         description: "Full booking system with Stripe payment integration",
       },
       {
@@ -44,6 +44,18 @@ export default function StarterPackage() {
       {
         title: "Backend Maintenance",
         description: "We handle all technical maintenance and updates",
+      },
+      {
+        title: "Professional Design & Mobile Optimization",
+        description: "Modern, responsive design for all devices",
+      },
+      {
+        title: "Up to 3 Packages per Session Type",
+        description: "Offer up to 3 different packages for each session type",
+      },
+      {
+        title: "Teaser Analytics Page (Blurred, Upgrade Prompt)",
+        description: "Analytics page is blurred with an upgrade prompt",
       },
     ],
     faqs: [
@@ -71,11 +83,13 @@ export default function StarterPackage() {
   };
 
   const keyFeatures = [
-    "Setup Cost: $1,000 + Monthly: $150",
-    "Max 10 clients with full scheduling & payments",
+    "Setup Cost: $1,000 + Monthly: $150+",
+    "Max 5 clients with full scheduling & payments",
     "Client dashboard and booking system",
     "Email support and backend maintenance",
     "Professional design and mobile optimization",
+    "Up to 3 packages per session type",
+    "Teaser analytics page (blurred, upgrade prompt)",
   ];
 
   return (

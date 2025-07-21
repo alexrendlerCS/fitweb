@@ -50,7 +50,7 @@ export default function PaymentSummary({ packageName, price, keyFeatures, packag
               <CardTitle className="text-2xl font-bold text-white">{packageName}</CardTitle>
               <div className="text-5xl font-bold text-[#004d40] mt-4">{price}</div>
               {price.includes("+") && (
-                <p className="text-gray-400 text-sm mt-2">Final price determined after consultation</p>
+                <p className="text-gray-400 text-sm mt-2">Final price determined after consultation. Add-ons available for additional monthly cost.</p>
               )}
             </CardHeader>
 

@@ -10,9 +10,9 @@ export default function ProPackage() {
   const packageData = {
     name: "Pro Package",
     price: "$1,250",
-    subtitle: "Everything you need to run your fitness business",
+    subtitle: "For established trainers with a growing client base",
     description:
-      "Complete business solution with payments, client management, and advanced scheduling.",
+      "Complete business solution with payments, client management, advanced scheduling, and support for up to 10 clients.",
     features: [
       {
         title: "Setup Cost: $1,250",
@@ -20,35 +20,39 @@ export default function ProPackage() {
           "One-time setup fee includes all Pro features and configuration",
       },
       {
-        title: "Monthly Cost: $175",
+        title: "Monthly Cost: $175+",
         description:
-          "Includes hosting, maintenance, and higher priority support",
+          "Base price includes hosting, maintenance, and higher priority support. Add-ons available for additional monthly cost.",
       },
       {
-        title: "Max Clients: 15",
+        title: "Max Clients: 10",
         description:
-          "Perfect for established trainers with growing client base",
+          "Perfect for established trainers with a growing client base",
       },
       {
         title: "All Starter Features",
         description: "Everything included in the Starter package",
       },
       {
-        title: "Bulk Email Integration",
+        title: "Bulk Email Integration (Newsletters, Announcements)",
         description:
           "Send newsletters and announcements to all clients at once",
       },
       {
         title: "3 Preset Analytics Widgets",
-        description: "Track revenue, bookings, and client engagement",
+        description: "Top revenue clients, recent sessions, recent payments; additional analytics blurred with upgrade prompt",
       },
       {
         title: "Higher Priority Support",
         description: "Faster response times and dedicated support channel",
       },
       {
-        title: "Advanced Scheduling",
-        description: "Recurring bookings, package deals, and calendar sync",
+        title: "Advanced Scheduling (Recurring Bookings, Package Deals, Calendar Sync)",
+        description: "Advanced scheduling features for your business",
+      },
+      {
+        title: "Up to 4 Packages per Session Type",
+        description: "Offer up to 4 different packages for each session type",
       },
     ],
     faqs: [
@@ -81,11 +85,14 @@ export default function ProPackage() {
   };
 
   const keyFeatures = [
-    "Setup Cost: $1,250 + Monthly: $175",
-    "Max 15 clients with advanced features",
+    "Setup Cost: $1,250 + Monthly: $175+",
+    "Max 10 clients with advanced features",
     "Bulk email integration and analytics",
     "Higher priority support and maintenance",
     "All Starter features included",
+    "Up to 4 packages per session type",
+    "3 preset analytics widgets (top revenue clients, recent sessions, recent payments; additional analytics blurred)",
+    "Advanced scheduling (recurring bookings, package deals, calendar sync)",
   ];
 
   return (
