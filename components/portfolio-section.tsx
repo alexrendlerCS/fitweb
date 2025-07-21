@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function PortfolioSection() {
   return (
@@ -17,20 +18,20 @@ export default function PortfolioSection() {
         <div className="max-w-4xl mx-auto">
           <Card className="bg-black border-gray-700 overflow-hidden transition-all duration-500 ease-in-out hover:shadow-[0_25px_50px_-12px_rgba(255,255,255,0.15)] hover:scale-105 hover:-translate-y-2">
             <CardContent className="p-0">
-              <div className="relative">
+              <Link href="/demo/client-dashboard" className="block group relative cursor-pointer" aria-label="See all features demo">
                 <Image
                   src="/coachkilday.png"
                   alt="Coach Kilday - Personal trainer platform dashboard"
                   width={800}
                   height={400}
-                  className="w-full"
+                  className="w-full group-hover:opacity-90 transition-opacity duration-200"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+              </Link>
 
               <div className="p-8">
-                <h3 className="text-2xl font-bold mb-4">
-                  Personal Trainer Dashboard
+                <h3 className="text-2xl font-bold mb-4 text-white">
+                  Coach Kilday's Personal Trainer Dashboard
                 </h3>
                 <p className="text-gray-300 mb-6">
                   A complete client management system with scheduling, progress
@@ -40,32 +41,28 @@ export default function PortfolioSection() {
                 </p>
 
                 <div className="flex flex-wrap gap-4 mb-6">
-                  <span className="bg-[#004d40] text-white px-3 py-1 rounded-full text-sm">
-                    Next.js
-                  </span>
-                  <span className="bg-[#004d40] text-white px-3 py-1 rounded-full text-sm">
-                    Stripe Integration
-                  </span>
-                  <span className="bg-[#004d40] text-white px-3 py-1 rounded-full text-sm">
-                    Real-time Updates
-                  </span>
-                  <span className="bg-[#004d40] text-white px-3 py-1 rounded-full text-sm">
-                    Mobile Responsive
-                  </span>
+                  <span className="bg-[#004d40] text-white px-3 py-1 rounded-full text-sm">Next.js</span>
+                  <span className="bg-[#004d40] text-white px-3 py-1 rounded-full text-sm">Stripe Integration</span>
+                  <span className="bg-[#004d40] text-white px-3 py-1 rounded-full text-sm">Real-time Updates</span>
+                  <span className="bg-[#004d40] text-white px-3 py-1 rounded-full text-sm">Mobile Responsive</span>
+                  <span className="bg-[#004d40] text-white px-3 py-1 rounded-full text-sm">Google Calendar Integration</span>
+                  <span className="bg-[#004d40] text-white px-3 py-1 rounded-full text-sm">Full Booking Flow</span>
+                  <span className="bg-[#004d40] text-white px-3 py-1 rounded-full text-sm">Email Integration</span>
+                  <span className="bg-[#004d40] text-white px-3 py-1 rounded-full text-sm">Client Progress Tracking</span>
+                  <span className="bg-[#004d40] text-white px-3 py-1 rounded-full text-sm">Custom Packages</span>
+                  <span className="bg-[#004d40] text-white px-3 py-1 rounded-full text-sm">Custom Analytics</span>
+
                 </div>
 
                 <Button
                   asChild
-                  className="bg-[#004d40] hover:bg-[#00695c] text-white rounded-xl"
+                  className="w-full mt-6 py-4 text-lg font-bold rounded-2xl bg-gradient-to-r from-[#004d40] to-[#00695c] shadow-lg hover:from-[#00695c] hover:to-[#004d40] text-white transition-all duration-300 border-2 border-[#004d40] hover:scale-105"
                 >
                   <a
-                    href="https://personal-trainer-ruddy.vercel.app/client/dashboard"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center"
+                    href="/demo/client-dashboard"
+                    className="block text-center tracking-wide"
                   >
-                    View Client Dashboard
-                    <ExternalLink className="ml-2 h-4 w-4" />
+                    See All of the Features in Action
                   </a>
                 </Button>
               </div>
