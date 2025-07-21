@@ -4,10 +4,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function PackagesSection() {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState(1); // Center by default
+
+  // Mobile: tap to activate, Desktop: hover to activate
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        // On mobile, always center the active card
+        setActiveIndex(1);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
   const packages = [
     {
@@ -23,7 +37,6 @@ export default function PackagesSection() {
         "Backend maintenance",
         "Professional design and mobile optimization",
         "Up to 3 packages per session type",
-        "Teaser analytics page (blurred, upgrade prompt)",
       ],
       popular: false,
     },
@@ -36,7 +49,7 @@ export default function PackagesSection() {
         "Max 10 clients",
         "All Starter features",
         "Bulk email integration (newsletters, announcements)",
-        "3 preset analytics widgets (Top revenue clients, recent sessions, recent payments; additional analytics blurred with upgrade prompt)",
+        "3 preset analytics widgets",
         "Higher priority support",
         "Advanced scheduling (recurring bookings, package deals, calendar sync)",
         "Up to 4 packages per session type",
@@ -72,49 +85,39 @@ export default function PackagesSection() {
           </p>
         </div>
 
-        <div className="flex justify-center gap-4 relative overflow-visible">
-          {packages.map((pkg, index) => {
-            // Calculate transform based on hover state
-            let transform = "";
-            let zIndex = "z-10";
-
-            if (hoveredIndex !== null) {
-              if (index === hoveredIndex) {
-                transform = "scale(1.25) translateX(0)";
-                zIndex = "z-30";
-              } else if (index === hoveredIndex - 1) {
-                transform = "scale(1.05) translateX(-40%)";
-                zIndex = "z-20";
-              } else if (index === hoveredIndex + 1) {
-                transform = "scale(1.05) translateX(40%)";
-                zIndex = "z-20";
-              } else {
-                transform = "scale(0.9) translateX(0)";
-                zIndex = "z-10";
-              }
+        <div className="flex justify-center items-center gap-4 relative overflow-visible">
+          {packages.map((pkg, idx) => {
+            let scale = "scale-90";
+            let translate = "";
+            let z = "z-10";
+            let opacity = "opacity-80";
+            if (idx === activeIndex) {
+              scale = "scale-125 md:scale-125";
+              z = "z-30";
+              opacity = "opacity-100";
+              translate = "";
+            } else if (idx === activeIndex - 1) {
+              translate = "-translate-x-1/4";
+              z = "z-20";
+            } else if (idx === activeIndex + 1) {
+              translate = "translate-x-1/4";
+              z = "z-20";
             } else {
-              // Default state when not hovering
-              transform = index === 1 ? "scale(1.1)" : "scale(1.0)";
-              zIndex = index === 1 ? "z-30" : "z-10";
+              scale = "scale-90";
+              z = "z-10";
+              opacity = "opacity-60";
             }
-
-            const titleSize = pkg.name === "Pro" ? "text-3xl" : "text-2xl";
-            const priceSize = pkg.name === "Pro" ? "text-5xl" : "text-4xl";
-            const padding = pkg.name === "Pro" ? "p-8" : "p-7";
-
             return (
               <Card
-                key={index}
-                className={`relative bg-black border-gray-700 transition-all duration-500 ease-in-out origin-center ${zIndex} ${
-                  pkg.popular
-                    ? "border-[#004d40] shadow-lg shadow-[#004d40]/20"
-                    : "border-gray-700"
-                } ${
-                  hoveredIndex === index ? "shadow-2xl shadow-[#004d40]/50" : ""
-                }`}
-                style={{ transform: transform }}
-                onMouseEnter={() => setHoveredIndex(index)}
-                onMouseLeave={() => setHoveredIndex(null)}
+                key={idx}
+                className={`relative bg-black border-gray-700 transition-all duration-500 ease-in-out origin-center ${z} ${scale} ${translate} ${opacity} h-full flex flex-col min-w-[200px] max-w-[270px]`}
+                style={{ cursor: isMobile ? "pointer" : "default" }}
+                onMouseEnter={() => {
+                  if (!isMobile) setActiveIndex(idx);
+                }}
+                onClick={() => {
+                  if (isMobile) setActiveIndex(idx);
+                }}
               >
                 {pkg.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -123,35 +126,32 @@ export default function PackagesSection() {
                     </span>
                   </div>
                 )}
-
-                <CardHeader className={`text-center pb-8 ${padding}`}>
-                  <CardTitle className={`font-bold text-white ${titleSize}`}>
+                <CardHeader className={`text-center pb-4 p-4 md:p-5`}>
+                  <CardTitle className={`font-bold text-white ${idx === activeIndex ? "text-xl md:text-2xl" : "text-lg md:text-xl"}`}>
                     {pkg.name}
                   </CardTitle>
-                  <div className={`font-bold text-[#004d40] mt-4 ${priceSize}`}>
+                  <div className={`font-bold text-[#004d40] mt-2 ${idx === activeIndex ? "text-2xl md:text-3xl" : "text-xl md:text-2xl"}`}>
                     {pkg.price}
                   </div>
-                  <p className="text-gray-400 mt-2 text-sm">
+                  <p className="text-gray-400 mt-1 text-xs">
                     {pkg.description}
                   </p>
                 </CardHeader>
-
-                <CardContent className={`space-y-4 ${padding} pt-0`}>
-                  <ul className="space-y-3">
+                <CardContent className={`space-y-2 p-4 md:p-5 pt-0 flex-1 flex flex-col`}>
+                  <ul className="space-y-1">
                     {pkg.features.map((feature, featureIndex) => (
                       <li
                         key={featureIndex}
-                        className="flex items-center text-gray-300 text-sm"
+                        className="flex items-center text-gray-300 text-xs"
                       >
-                        <Check className="text-[#004d40] mr-3 h-5 w-5 flex-shrink-0" />
+                        <Check className="text-[#004d40] mr-2 h-4 w-4 flex-shrink-0" />
                         {feature}
                       </li>
                     ))}
                   </ul>
-
                   <Button
                     asChild
-                    className="w-full mt-8 rounded-xl bg-[#004d40] hover:bg-[#00695c] text-white font-semibold py-3 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#004d40]/50"
+                    className="w-full mt-4 rounded-xl bg-[#004d40] hover:bg-[#00695c] text-white font-semibold py-2 text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#004d40]/50"
                   >
                     <Link href={`/packages/${pkg.name.toLowerCase()}`}>
                       Learn More
