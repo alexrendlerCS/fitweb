@@ -8,20 +8,25 @@ import { useState, useEffect } from "react";
 
 export default function PackagesSection() {
   const [activeIndex, setActiveIndex] = useState(1); // Center by default
+  const [isMobile, setIsMobile] = useState(false);
 
   // Mobile: tap to activate, Desktop: hover to activate
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
         // On mobile, always center the active card
         setActiveIndex(1);
       }
     };
+    
+    // Set initial mobile state
+    handleResize();
+    
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
   const packages = [
     {
@@ -109,8 +114,7 @@ export default function PackagesSection() {
             return (
               <Card
                 key={idx}
-                className={`relative bg-black border-gray-700 transition-all duration-500 ease-in-out origin-center ${z} ${scale} ${translate} ${opacity} h-full flex flex-col min-w-[200px] max-w-[270px]`}
-                style={{ cursor: isMobile ? "pointer" : "default" }}
+                className={`relative bg-black border-gray-700 transition-all duration-500 ease-in-out origin-center ${z} ${scale} ${translate} ${opacity} h-full flex flex-col min-w-[200px] max-w-[270px] ${isMobile ? 'cursor-pointer' : 'cursor-default'}`}
                 onMouseEnter={() => {
                   if (!isMobile) setActiveIndex(idx);
                 }}

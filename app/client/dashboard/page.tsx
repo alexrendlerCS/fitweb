@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import RecentUpdates from "@/components/recent-updates";
 import { useRouter } from "next/navigation";
 
 interface Client {
@@ -74,14 +75,16 @@ export default function ClientDashboard() {
         return;
       }
 
-      console.log('Session found, setting mock client data');
-      // Mock client data for now
-      setClient({
-        id: 'mock-id',
-        email: 'client@example.com',
-        fullName: 'John Doe',
-        projectStatus: 'approved'
-      });
+      console.log('Session found, fetching real client data');
+      // Fetch real client data from the session
+      const response = await fetch('/api/client/profile');
+      if (response.ok) {
+        const data = await response.json();
+        setClient(data.client);
+      } else {
+        console.error('Failed to fetch client data');
+        router.push('/status');
+      }
     } catch (error) {
       console.error('Auth check failed:', error);
       router.push('/status');
@@ -141,27 +144,8 @@ export default function ClientDashboard() {
 
           {/* Dashboard Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Recent Commits */}
-            <Card className="bg-gray-900 border-gray-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <GitCommit className="h-5 w-5 text-[#004d40]" />
-                  Recent Updates
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="p-3 bg-gray-800 rounded-lg">
-                    <p className="text-sm text-gray-300">Added payment integration</p>
-                    <p className="text-xs text-gray-500">2 hours ago</p>
-                  </div>
-                  <div className="p-3 bg-gray-800 rounded-lg">
-                    <p className="text-sm text-gray-300">Updated client dashboard</p>
-                    <p className="text-xs text-gray-500">1 day ago</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Recent Updates */}
+            <RecentUpdates clientId={client.id} maxCommits={3} />
 
             {/* Feature Requests */}
             <Card className="bg-gray-900 border-gray-700">
