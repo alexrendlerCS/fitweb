@@ -77,7 +77,7 @@ export default function StarterPackage() {
       {
         question: "Is hosting included?",
         answer:
-          "The first year of hosting is included. After that, hosting costs approximately $10-15/month.",
+          "Default hosting is included in your monthly cost. However, if premium hosting is requested (i.e., custom domain maintenance or a larger client base), there will be additional monthly charges.",
       },
     ],
   };

@@ -67,9 +67,9 @@ export default function ProPackage() {
           "Through Stripe, you can accept all major credit cards, Apple Pay, Google Pay, and bank transfers.",
       },
       {
-        question: "Can clients book recurring sessions?",
+        question: "What happens if I miss a payment?",
         answer:
-          "Yes! The Pro package includes recurring booking functionality and package deals.",
+          "If a monthly payment is missed, there will be a 4-day grace period to make up the payment. Otherwise, the website will no longer be hosted or accessible to trainers or clients.",
       },
       {
         question: "Is there a transaction fee?",

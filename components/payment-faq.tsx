@@ -15,27 +15,27 @@ export default function PaymentFAQ() {
     {
       question: "How does payment work?",
       answer:
-        "You'll be redirected to a secure Stripe checkout page where you can pay with any major credit card, Apple Pay, or Google Pay. Once payment is confirmed, you'll receive a confirmation email and be contacted within 24 hours to start your onboarding process.",
+        "After acceptance, you'll receive a Zoom link with multiple date and time options for our initial consultation. During this call, we'll discuss your project goals, special requests, and any additional charges for premium hosting, domain management, or other services. If everything aligns well, you'll receive a secure Stripe payment link for the initial website creation fee. Once your website is completed and ready for testing, you'll receive another Stripe link for the recurring monthly payments at the agreed-upon price.",
     },
     {
       question: "Can I request a refund?",
       answer:
-        "Refunds are considered on a case-by-case basis depending on work already completed. If you're not satisfied with the initial consultation or planning phase, we offer a full refund within the first 7 days.",
+        "We provide progress checks throughout the development process. Within 7 days of payment, if the progress doesn't meet your expectations or you change your mind, you can request a full refund minus any taxes incurred by Stripe. For payment plans, refund policies vary case-by-case depending on work completed and project stage.",
     },
     {
       question: "Do you offer payment plans?",
       answer:
-        "For Pro and Elite packages, we offer payment plans. You can pay 50% upfront and 50% upon completion. Contact us to discuss custom payment arrangements for larger projects.",
+        "Yes! We offer payment plans for Pro and Elite packages. If you prefer not to pay upfront or want to split the payment, we allow 50% payment upfront and 50% upon website deployment for testing and usage. Refund policies for payment plans vary case-by-case, and monthly recurring payments are required upfront.",
     },
     {
       question: "What happens after I purchase?",
       answer:
-        "Within 24 hours of purchase, you'll receive a welcome email with next steps, a project questionnaire, and a link to schedule your kickoff call. We'll also send you access to our client portal where you can track progress.",
+        "Immediately after purchase, I begin creating your website and provide a demo link within 7 days where you can view progress and request changes or additional features during development. You'll receive an email with instructions on how to sign up for progress tracking, where you can monitor all changes I make to the website, request new features, and manage your payments.",
     },
     {
       question: "Are there any hidden fees?",
       answer:
-        "No hidden fees! The price you see is what you pay. The only additional costs might be third-party services you choose (like premium hosting or specific integrations), which we'll discuss upfront.",
+        "No hidden fees! The price you see is the price you pay. Any additional costs not listed on our website will be clearly discussed and agreed upon during our initial project consultation. Monthly prices will never increase unless you specifically request additional features.",
     },
   ]
 

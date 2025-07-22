@@ -60,12 +60,12 @@ export default function ElitePackage() {
       {
         question: "How long does the Elite package take?",
         answer:
-          "Elite packages typically take 6-8 weeks due to the custom development and AI integration work.",
+          "Elite packages typically take 3-4 weeks due to the custom development and ongoing changes/additions.",
       },
       {
-        question: "What kind of AI features are included?",
+        question: "What are examples of add-on features that are available?",
         answer:
-          "AI chatbot for customer service, automated workout recommendations, and smart scheduling optimization.",
+          "Some examples include: AI chatbot for customer service, automated workout recommendations, and smart scheduling optimization.",
       },
       {
         question: "Can you handle multiple locations?",
