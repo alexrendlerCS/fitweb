@@ -17,6 +17,31 @@ export default function Header() {
     { name: "Status", href: "/status" },
   ];
 
+  const scrollToSection = (href: string) => {
+    if (href.startsWith('/#')) {
+      const id = href.substring(2); // Remove '/#'
+      
+      // If we're not on the homepage, navigate there first
+      if (window.location.pathname !== '/') {
+        window.location.href = href;
+        return;
+      }
+      
+      // If we're already on the homepage, scroll to the section
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    } else if (href.startsWith('/')) {
+      // For non-anchor links like /status
+      window.location.href = href;
+    }
+    setIsMenuOpen(false);
+  };
+
   return (
     <header className="fixed top-0 w-full bg-black/90 backdrop-blur-sm z-50 border-b border-gray-800">
       <div className="container mx-auto px-4 py-4">
@@ -28,13 +53,13 @@ export default function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
             {navItems.map((item) => (
-              <a
+              <button
                 key={item.name}
-                href={item.href}
-                className="text-white hover:text-[#004d40] transition-colors duration-200"
+                onClick={() => scrollToSection(item.href)}
+                className="text-white hover:text-[#004d40] transition-colors duration-200 cursor-pointer pointer-events-auto bg-transparent border-none text-left"
               >
                 {item.name}
-              </a>
+              </button>
             ))}
           </nav>
 
@@ -53,14 +78,13 @@ export default function Header() {
         {isMenuOpen && (
           <nav className="md:hidden mt-4 pb-4">
             {navItems.map((item) => (
-              <a
+              <button
                 key={item.name}
-                href={item.href}
-                className="block py-2 text-white hover:text-[#004d40] transition-colors duration-200"
-                onClick={() => setIsMenuOpen(false)}
+                onClick={() => scrollToSection(item.href)}
+                className="block py-2 text-white hover:text-[#004d40] transition-colors duration-200 cursor-pointer pointer-events-auto bg-transparent border-none text-left w-full"
               >
                 {item.name}
-              </a>
+              </button>
             ))}
           </nav>
         )}

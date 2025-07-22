@@ -10,27 +10,27 @@ export default function TestimonialSection() {
 
   const testimonials = [
     {
-      name: "Sarah Johnson",
-      role: "Personal Trainer",
+      name: "Kimberly Joyce",
+      role: "Physical Therapist",
       image: "/placeholder.svg?height=80&width=80",
       quote:
-        "FitWeb Studio transformed my business! The client dashboard and automated scheduling saved me 10+ hours per week.",
+        "The quick delivery time and amazing design exceeded my expectations. Alex went above and beyond what was expected, creating a platform that perfectly fits my practice needs.",
       rating: 5,
     },
     {
-      name: "Mike Rodriguez",
-      role: "Fitness Coach",
+      name: "Coach Kilday",
+      role: "Fitness Trainer",
       image: "/placeholder.svg?height=80&width=80",
       quote:
-        "The payment integration was seamless. I went from manual invoicing to automated payments in just one week.",
+        "FitWeb Studio transformed my business! The reliability, attentiveness, and quick response time made the entire process seamless. My clients love the new booking system!",
       rating: 5,
     },
     {
-      name: "Emma Chen",
-      role: "Yoga Instructor",
+      name: "Michael Marx",
+      role: "Founder of SecondGlance",
       image: "/placeholder.svg?height=80&width=80",
       quote:
-        "Professional, responsive, and delivered exactly what I needed. My clients love the new booking system!",
+        "Alex delivered a product better than what was expected and added more features than expected, making the website better than what was asked for. Truly exceptional work!",
       rating: 5,
     },
   ];

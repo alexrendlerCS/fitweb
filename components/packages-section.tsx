@@ -64,8 +64,7 @@ export default function PackagesSection() {
         "$200+/month",
         "Unlimited clients",
         "All Pro features",
-        "Editable homepage (customize photos, about, branding)",
-        "Top priority support (direct access to dev team, feature requests)",
+        "Top priority support",
         "Custom analytics dashboard (fully customizable, by request)",
         "Multi-trainer and multi-location support",
         "Ongoing strategy calls, feature updates, bug fixes",
@@ -76,16 +75,16 @@ export default function PackagesSection() {
   ];
 
   return (
-    <section id="packages" className="py-20 bg-gray-900">
+    <section id="packages" className="pb-20 bg-gray-900">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
+        <div className="text-center mb-0">
           <h2 className="text-4xl font-bold mb-4">Choose Your Package</h2>
           <p className="text-xl text-gray-300">
             Tailored solutions for every stage of your fitness business
           </p>
         </div>
 
-        <div className="flex justify-center items-center gap-4 relative overflow-visible">
+        <div className="flex justify-center items-center gap-4 relative overflow-visible mt-16">
           {packages.map((pkg, idx) => {
             let scale = "scale-90";
             let translate = "";
