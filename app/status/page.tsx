@@ -12,26 +12,40 @@ import {
   XCircle,
   ExternalLink,
   Mail,
+  User,
+  LogIn,
 } from "lucide-react";
 import { supabase, TrainerApplication } from "@/lib/supabase";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import ClientAuthModal from "@/components/client-auth-modal";
+
+interface ClientStatus {
+  hasAccount: boolean;
+  hasPassword: boolean;
+  canAccess: boolean;
+  projectStatus: string;
+  message: string;
+}
 
 export default function StatusPage() {
   const [email, setEmail] = useState("");
-  const [application, setApplication] = useState<TrainerApplication | null>(
-    null
-  );
+  const [application, setApplication] = useState<TrainerApplication | null>(null);
+  const [clientStatus, setClientStatus] = useState<ClientStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'signup' | 'login'>('signup');
 
   const checkStatus = async () => {
     if (!email) return;
 
     setIsLoading(true);
     setError(null);
+    setClientStatus(null);
 
     try {
+      // Check trainer application status
       const { data, error } = await supabase
         .from("trainer_applications")
         .select("*")
@@ -43,6 +57,11 @@ export default function StatusPage() {
 
       if (data && data.length > 0) {
         setApplication(data[0]);
+        
+        // If application is approved, check client status
+        if (data[0].status === "approved") {
+          await checkClientStatus();
+        }
       } else {
         setError("No application found with this email address");
         setApplication(null);
@@ -52,6 +71,36 @@ export default function StatusPage() {
       setError("Failed to check application status");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const checkClientStatus = async () => {
+    try {
+      const response = await fetch('/api/client/check-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      setClientStatus(data);
+    } catch (err) {
+      console.error("Error checking client status:", err);
+    }
+  };
+
+  const handleAuthClick = (mode: 'signup' | 'login') => {
+    setAuthMode(mode);
+    setShowAuthModal(true);
+  };
+
+  const handleAuthClose = () => {
+    setShowAuthModal(false);
+    // Refresh client status after authentication
+    if (application?.status === "approved") {
+      checkClientStatus();
     }
   };
 
@@ -236,6 +285,56 @@ export default function StatusPage() {
                       </div>
                     </div>
 
+                    {/* Client Dashboard Access for Approved Projects */}
+                    {application.status === "approved" && clientStatus && (
+                      <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border border-blue-600/50 p-6 rounded-xl shadow-lg">
+                        <div className="flex items-start gap-4">
+                          <div className="bg-blue-500/20 p-3 rounded-lg">
+                            <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-white mb-2">
+                              Project Dashboard Access
+                            </h3>
+                            <p className="text-blue-100 mb-4 leading-relaxed">
+                              {clientStatus.message}
+                            </p>
+                            {clientStatus.canAccess && (
+                              <div className="flex gap-3">
+                                {!clientStatus.hasAccount ? (
+                                  <Button
+                                    onClick={() => handleAuthClick('signup')}
+                                    className="bg-gradient-to-r from-[#004d40] to-[#00695c] hover:from-[#00695c] hover:to-[#004d40] text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                                  >
+                                    <User className="h-4 w-4 mr-2" />
+                                    Set Up Account
+                                  </Button>
+                                ) : !clientStatus.hasPassword ? (
+                                  <Button
+                                    onClick={() => handleAuthClick('signup')}
+                                    className="bg-gradient-to-r from-[#004d40] to-[#00695c] hover:from-[#00695c] hover:to-[#004d40] text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                                  >
+                                    <User className="h-4 w-4 mr-2" />
+                                    Set Up Password
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    onClick={() => handleAuthClick('login')}
+                                    className="bg-gradient-to-r from-[#004d40] to-[#00695c] hover:from-[#00695c] hover:to-[#004d40] text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                                  >
+                                    <LogIn className="h-4 w-4 mr-2" />
+                                    Login to View Dashboard
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {application.status === "approved" &&
                       application.stripe_link && (
                         <div className="bg-blue-900/20 border border-blue-700 p-4 rounded-lg">
@@ -288,8 +387,7 @@ export default function StatusPage() {
                       </p>
                       <Button
                         asChild
-                        variant="outline"
-                        className="border-gray-600 text-white hover:bg-gray-800"
+                        className="bg-[#004d40] hover:bg-[#00695c] text-white"
                       >
                         <a
                           href="mailto:hello@fitwebstudio.com"
@@ -309,6 +407,13 @@ export default function StatusPage() {
       </main>
 
       <Footer />
+
+      <ClientAuthModal
+        isOpen={showAuthModal}
+        onClose={handleAuthClose}
+        email={email}
+        mode={authMode}
+      />
     </div>
   );
 }
