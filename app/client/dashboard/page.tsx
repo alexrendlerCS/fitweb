@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Calendar, 
   Settings, 
@@ -11,11 +12,23 @@ import {
   CreditCard, 
   GitCommit,
   ExternalLink,
-  LogOut
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Edit,
+  Plus,
+  Bug,
+  X,
+  History,
+  MessageSquare as Comment
 } from "lucide-react";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import RecentUpdates from "@/components/recent-updates";
+import FeatureRequestForm from "@/components/feature-request-form";
 import { useRouter } from "next/navigation";
 
 interface Client {
@@ -25,15 +38,58 @@ interface Client {
   projectStatus: string;
 }
 
+interface FeatureRequest {
+  id: string;
+  title: string;
+  description: string;
+  feedback_type: string;
+  priority: string;
+  status: string;
+  page_url?: string;
+  created_at: string;
+  estimated_cost?: number;
+  approved_cost?: number;
+}
+
 export default function ClientDashboard() {
   const [client, setClient] = useState<Client | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showFeatureForm, setShowFeatureForm] = useState(false);
+  const [featureRequests, setFeatureRequests] = useState<FeatureRequest[]>([]);
+  const [requestCounts, setRequestCounts] = useState({ pending: 0, completed: 0, total: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+  const [showAllRequestsDialog, setShowAllRequestsDialog] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     // Check if user is authenticated
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (client?.email) {
+      fetchFeatureRequests();
+    }
+  }, [client?.email]);
+
+  const fetchFeatureRequests = async () => {
+    if (!client?.email) return;
+    
+    setIsLoadingRequests(true);
+    try {
+      const response = await fetch(`/api/feature-requests?email=${encodeURIComponent(client.email)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setFeatureRequests(data.featureRequests || []);
+        setRequestCounts(data.counts || { pending: 0, completed: 0, total: 0 });
+      }
+    } catch (error) {
+      console.error('Error fetching feature requests:', error);
+    } finally {
+      setIsLoadingRequests(false);
+    }
+  };
 
   const checkAuth = async () => {
     try {
@@ -99,6 +155,60 @@ export default function ClientDashboard() {
     router.push('/status');
   };
 
+  const getFeedbackTypeIcon = (type: string) => {
+    switch (type) {
+      case 'edit': return <Edit className="h-4 w-4" />;
+      case 'feature': return <Plus className="h-4 w-4" />;
+      case 'bug': return <Bug className="h-4 w-4" />;
+      case 'comment': return <Comment className="h-4 w-4" />;
+      default: return <MessageSquare className="h-4 w-4" />;
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-500';
+      case 'medium': return 'bg-yellow-500';
+      case 'low': return 'bg-green-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-500';
+      case 'in_progress': return 'bg-blue-500';
+      case 'pending': return 'bg-yellow-500';
+      case 'declined': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return <CheckCircle className="h-4 w-4" />;
+      case 'in_progress': return <Clock className="h-4 w-4" />;
+      case 'pending': return <AlertCircle className="h-4 w-4" />;
+      case 'declined': return <X className="h-4 w-4" />;
+      default: return <Clock className="h-4 w-4" />;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Pagination
+  const requestsPerPage = 1;
+  const totalPages = Math.ceil(featureRequests.length / requestsPerPage);
+  const startIndex = (currentPage - 1) * requestsPerPage;
+  const endIndex = startIndex + requestsPerPage;
+  const currentRequests = featureRequests.slice(startIndex, endIndex);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -145,7 +255,7 @@ export default function ClientDashboard() {
           {/* Dashboard Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Recent Updates */}
-            <RecentUpdates clientId={client.id} maxCommits={3} />
+            <RecentUpdates clientId={client.id} maxCommits={4} />
 
             {/* Feature Requests */}
             <Card className="bg-gray-900 border-gray-700">
@@ -156,25 +266,113 @@ export default function ClientDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Button
-                    asChild
+                    onClick={() => setShowFeatureForm(true)}
                     className="w-full bg-[#004d40] hover:bg-[#00695c]"
                   >
-                    <a 
-                      href="https://forms.google.com/your-form-link" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      Request New Feature
-                    </a>
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Request New Feature
                   </Button>
-                  <div className="text-sm text-gray-300">
-                    <p>Pending: 2 requests</p>
-                    <p>Completed: 5 requests</p>
+                  
+                  {/* Request Counts */}
+                  <div className="text-sm text-gray-300 space-y-1">
+                    <p>Pending: {requestCounts.pending} requests</p>
+                    <p>Completed: {requestCounts.completed} requests</p>
+                    <p>Total: {requestCounts.total} requests</p>
                   </div>
+
+                  {/* Feature Request Cards */}
+                  {isLoadingRequests ? (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#004d40] mx-auto"></div>
+                      <p className="text-gray-400 text-sm mt-2">Loading requests...</p>
+                    </div>
+                  ) : currentRequests.length > 0 ? (
+                    <div className="space-y-3">
+                      {currentRequests.map((request) => (
+                        <div key={request.id} className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {getFeedbackTypeIcon(request.feedback_type)}
+                              <h4 className="text-white font-medium text-sm">{request.title}</h4>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Badge className={`${getPriorityColor(request.priority)} text-white text-xs`}>
+                                {request.priority}
+                              </Badge>
+                              <Badge className={`${getStatusColor(request.status)} text-white text-xs`}>
+                                {getStatusIcon(request.status)}
+                                {request.status}
+                              </Badge>
+                            </div>
+                          </div>
+                          <p className="text-gray-300 text-xs mb-2 line-clamp-2">
+                            {request.description}
+                          </p>
+                          {request.page_url && (
+                            <p className="text-gray-400 text-xs mb-2">
+                              Page: {request.page_url}
+                            </p>
+                          )}
+                          <div className="flex items-center justify-between text-xs mb-2">
+                            <span className="text-gray-500">
+                              {formatDate(request.created_at)}
+                            </span>
+                            {request.estimated_cost && (
+                              <span className="text-yellow-400 font-medium">
+                                Est. Cost: ${request.estimated_cost}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Pagination */}
+                      {totalPages > 1 && (
+                        <div className="flex items-center justify-between pt-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                            className="text-gray-400 hover:text-white"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          <span className="text-gray-400 text-sm">
+                            Page {currentPage} of {totalPages}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                            disabled={currentPage === totalPages}
+                            className="text-gray-400 hover:text-white"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {/* View All Requests Button */}
+                      {featureRequests.length > 0 && (
+                        <Button
+                          onClick={() => setShowAllRequestsDialog(true)}
+                          className="w-full bg-gradient-to-r from-[#004d40] to-[#00695c] hover:from-[#00695c] hover:to-[#004d40] text-white shadow-lg hover:shadow-xl hover:shadow-[#004d40]/30 transition-all duration-300 hover:scale-105"
+                        >
+                          <History className="h-4 w-4 mr-2" />
+                          View All Requests
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <MessageSquare className="h-8 w-8 text-gray-500 mx-auto mb-2" />
+                      <p className="text-gray-400 text-sm">No feature requests yet</p>
+                      <p className="text-gray-500 text-xs">Submit your first request above!</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -255,6 +453,97 @@ export default function ClientDashboard() {
       </main>
 
       <Footer />
-    </div>
-  );
-} 
+
+                          {/* Feature Request Form Dialog */}
+          {client && (
+            <FeatureRequestForm
+              isOpen={showFeatureForm}
+              onClose={() => {
+                setShowFeatureForm(false);
+                fetchFeatureRequests(); // Refresh requests after form closes
+              }}
+              clientEmail={client.email}
+              subscriptionTier="pro" // TODO: Get from client data
+            />
+          )}
+
+          {/* All Feature Requests Dialog */}
+          <Dialog open={showAllRequestsDialog} onOpenChange={setShowAllRequestsDialog}>
+            <DialogContent className="max-w-4xl max-h-[80vh] bg-gray-900 border-gray-700">
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <DialogTitle className="text-white flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-[#004d40]" />
+                    All Feature Requests
+                    <Badge variant="outline" className="ml-2 text-gray-300 border-gray-600">
+                      {featureRequests.length} requests
+                    </Badge>
+                  </DialogTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAllRequestsDialog(false)}
+                    className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-800"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </DialogHeader>
+
+              <div className="overflow-y-auto max-h-[60vh]">
+                {featureRequests.length > 0 ? (
+                  <div className="space-y-4">
+                    {featureRequests.map((request) => (
+                      <div key={request.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            {getFeedbackTypeIcon(request.feedback_type)}
+                            <h4 className="text-white font-medium">{request.title}</h4>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge className={`${getPriorityColor(request.priority)} text-white`}>
+                              {request.priority}
+                            </Badge>
+                            <Badge className={`${getStatusColor(request.status)} text-white`}>
+                              {getStatusIcon(request.status)}
+                              {request.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        
+                        <p className="text-gray-300 text-sm mb-3">
+                          {request.description}
+                        </p>
+                        
+                        {request.page_url && (
+                          <p className="text-gray-400 text-sm mb-2">
+                            <span className="font-medium">Page:</span> {request.page_url}
+                          </p>
+                        )}
+                        
+                        <div className="flex items-center justify-between text-gray-500 text-xs">
+                          <span>Submitted: {formatDate(request.created_at)}</span>
+                          <div className="flex items-center gap-4">
+                            {request.estimated_cost && (
+                              <span className="text-yellow-400 font-medium">
+                                Est. Cost: ${request.estimated_cost}
+                              </span>
+                            )}
+                            <span>Request ID: {request.id.slice(0, 8)}...</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <MessageSquare className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-400">No feature requests found</p>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      );
+    } 
