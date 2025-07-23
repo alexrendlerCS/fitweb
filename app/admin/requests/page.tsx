@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
@@ -57,6 +58,9 @@ export default function AdminRequests() {
   const [editingPrice, setEditingPrice] = useState<string | null>(null);
   const [priceValue, setPriceValue] = useState<string>('');
   const [adminNotes, setAdminNotes] = useState<string>('');
+  const [declineReason, setDeclineReason] = useState<string>('');
+  const [showDeclineDialog, setShowDeclineDialog] = useState(false);
+  const [decliningRequestId, setDecliningRequestId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRequests();
@@ -125,11 +129,11 @@ export default function AdminRequests() {
 
   const getFeedbackTypeIcon = (type: string) => {
     switch (type) {
-      case 'edit': return <Edit className="h-4 w-4" />;
-      case 'feature': return <Plus className="h-4 w-4" />;
-      case 'bug': return <Bug className="h-4 w-4" />;
-      case 'comment': return <Comment className="h-4 w-4" />;
-      default: return <MessageSquare className="h-4 w-4" />;
+      case 'edit': return <Edit className="h-4 w-4 text-white" />;
+      case 'feature': return <Plus className="h-4 w-4 text-white" />;
+      case 'bug': return <Bug className="h-4 w-4 text-white" />;
+      case 'comment': return <Comment className="h-4 w-4 text-white" />;
+      default: return <MessageSquare className="h-4 w-4 text-white" />;
     }
   };
 
@@ -194,6 +198,12 @@ export default function AdminRequests() {
   };
 
   const handleStatusChange = async (requestId: string, newStatus: string) => {
+    if (newStatus === 'declined') {
+      setDecliningRequestId(requestId);
+      setShowDeclineDialog(true);
+      return;
+    }
+
     setUpdatingStatus(requestId);
     try {
       const response = await fetch('/api/admin/feature-requests', {
@@ -224,6 +234,54 @@ export default function AdminRequests() {
     } finally {
       setUpdatingStatus(null);
     }
+  };
+
+  const handleDeclineWithReason = async () => {
+    if (!decliningRequestId || !declineReason.trim()) {
+      alert('Please provide a reason for declining the request');
+      return;
+    }
+
+    setUpdatingStatus(decliningRequestId);
+    try {
+      const response = await fetch('/api/admin/feature-requests', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: decliningRequestId,
+          status: 'declined',
+          admin_notes: declineReason.trim()
+        })
+      });
+
+      if (response.ok) {
+        // Update the local state
+        setRequests(prevRequests => 
+          prevRequests.map(request => 
+            request.id === decliningRequestId 
+              ? { ...request, status: 'declined', admin_notes: declineReason.trim() }
+              : request
+          )
+        );
+        setShowDeclineDialog(false);
+        setDeclineReason('');
+        setDecliningRequestId(null);
+      } else {
+        console.error('Failed to decline request');
+      }
+    } catch (error) {
+      console.error('Error declining request:', error);
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
+  const handleCancelDecline = () => {
+    setShowDeclineDialog(false);
+    setDeclineReason('');
+    setDecliningRequestId(null);
   };
 
   const handlePriceEdit = (request: FeatureRequest) => {
@@ -360,8 +418,7 @@ export default function AdminRequests() {
                   setStatusFilter("all");
                   setPriorityFilter("all");
                 }}
-                variant="outline"
-                className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                className="bg-[#004d40] hover:bg-[#00695c] text-white"
               >
                 Clear Filters
               </Button>
@@ -370,20 +427,20 @@ export default function AdminRequests() {
         </Card>
 
         {/* Pending Price Approval Section */}
-        {sortedRequests.filter(req => req.price_status === 'pending_approval').length > 0 && (
+        {sortedRequests.filter(req => req.price_status === 'pending_estimate').length > 0 && (
           <Card className="bg-gray-900 border-yellow-600 mb-6">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-yellow-400" />
-                Pending Price Approval ({sortedRequests.filter(req => req.price_status === 'pending_approval').length})
+                Pending Price Approval ({sortedRequests.filter(req => req.price_status === 'pending_estimate').length})
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {sortedRequests
-                  .filter(req => req.price_status === 'pending_approval')
+                  .filter(req => req.price_status === 'pending_estimate')
                   .map((request) => (
-                    <div key={request.id} className="bg-gray-800 rounded-lg p-4 border border-yellow-600/30">
+                    <div key={request.id} className="bg-gray-800 rounded-lg p-4 border border-yellow-600/30 shadow-lg shadow-yellow-600/10">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
@@ -432,8 +489,7 @@ export default function AdminRequests() {
                                 </Button>
                                 <Button
                                   onClick={handlePriceCancel}
-                                  variant="outline"
-                                  className="border-gray-600 text-gray-300"
+                                  className="bg-red-500 hover:bg-red-600 text-white"
                                 >
                                   Cancel
                                 </Button>
@@ -451,9 +507,8 @@ export default function AdminRequests() {
                               </div>
                               <Button
                                 onClick={() => handlePriceEdit(request)}
-                                variant="outline"
                                 size="sm"
-                                className="border-yellow-600 text-yellow-400 hover:bg-yellow-600 hover:text-white"
+                                className="bg-green-600 hover:bg-green-700 text-white"
                               >
                                 Edit Price
                               </Button>
@@ -495,8 +550,12 @@ export default function AdminRequests() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedRequests.map((request) => (
-                      <tr key={request.id} className="border-b border-gray-800 hover:bg-gray-800/50">
+                                         {sortedRequests.map((request) => (
+                       <tr key={request.id} className={`border-b border-gray-800 hover:bg-gray-800/50 transition-all duration-200 ${
+                         request.status === 'pending' || request.status === 'in_progress' || request.price_status === 'pending_estimate'
+                           ? 'bg-gray-800/30 border-l-4 border-l-[#004d40] shadow-sm' 
+                           : 'opacity-60'
+                       }`}>
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2">
                             <Badge className={`${getPriorityColor(request.priority)} text-white`}>
@@ -510,7 +569,7 @@ export default function AdminRequests() {
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2">
                             {getFeedbackTypeIcon(request.feedback_type)}
-                            <span className="text-sm">{request.feedback_type}</span>
+                            <span className="text-sm text-white">{request.feedback_type}</span>
                           </div>
                         </td>
                         <td className="py-4 px-4">
@@ -539,25 +598,29 @@ export default function AdminRequests() {
                             {request.subscription_tier}
                           </Badge>
                         </td>
-                        <td className="py-4 px-4">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                className={`p-0 h-auto ${updatingStatus === request.id ? 'opacity-50' : ''}`}
-                                disabled={updatingStatus === request.id}
-                              >
-                                <Badge className={`${getStatusColor(request.status)} text-white cursor-pointer hover:opacity-80 transition-opacity`}>
-                                  {updatingStatus === request.id ? (
-                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                                  ) : (
-                                    getStatusIcon(request.status)
-                                  )}
-                                  {request.status}
-                                  <ChevronDown className="h-3 w-3 ml-1" />
-                                </Badge>
-                              </Button>
-                            </DropdownMenuTrigger>
+                                                 <td className="py-4 px-4">
+                           <DropdownMenu>
+                             <DropdownMenuTrigger asChild>
+                               <Button
+                                 variant="ghost"
+                                 className={`p-0 h-auto ${updatingStatus === request.id ? 'opacity-50' : ''}`}
+                                 disabled={updatingStatus === request.id}
+                               >
+                                 <Badge className={`${getStatusColor(request.status)} text-white cursor-pointer hover:opacity-80 transition-opacity ${
+                                   request.status === 'pending' || request.status === 'in_progress' || request.price_status === 'pending_estimate'
+                                     ? 'ring-2 ring-[#004d40] ring-opacity-50 shadow-lg' 
+                                     : ''
+                                 }`}>
+                                   {updatingStatus === request.id ? (
+                                     <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                   ) : (
+                                     getStatusIcon(request.status)
+                                   )}
+                                   {request.status}
+                                   <ChevronDown className="h-3 w-3 ml-1" />
+                                 </Badge>
+                               </Button>
+                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="bg-gray-800 border-gray-600">
                               <DropdownMenuItem 
                                 onClick={() => handleStatusChange(request.id, 'pending')}
@@ -699,6 +762,51 @@ export default function AdminRequests() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Decline Reason Dialog */}
+      <Dialog open={showDeclineDialog} onOpenChange={setShowDeclineDialog}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <X className="h-5 w-5 text-red-400" />
+              Decline Feature Request
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-300 mb-2 block">
+                Reason for Declining *
+              </label>
+              <Textarea
+                value={declineReason}
+                onChange={(e) => setDeclineReason(e.target.value)}
+                placeholder="Please provide a reason for declining this feature request..."
+                className="bg-gray-800 border-gray-600 text-white min-h-[100px]"
+                required
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button
+                onClick={handleCancelDecline}
+                variant="outline"
+                className="border-gray-600 text-gray-300 hover:bg-gray-800"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeclineWithReason}
+                disabled={!declineReason.trim() || updatingStatus === decliningRequestId}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {updatingStatus === decliningRequestId ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                ) : null}
+                Decline Request
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

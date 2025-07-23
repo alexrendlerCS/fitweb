@@ -1,7 +1,7 @@
 -- Add price-related fields to feature_requests table
 ALTER TABLE feature_requests 
 ADD COLUMN IF NOT EXISTS admin_notes TEXT,
-ADD COLUMN IF NOT EXISTS price_status VARCHAR(20) DEFAULT 'not_set' CHECK (price_status IN ('not_set', 'pending_approval', 'approved', 'declined'));
+ADD COLUMN IF NOT EXISTS price_status VARCHAR(20) DEFAULT 'not_set' CHECK (price_status IN ('not_set', 'pending_estimate', 'pending_approval', 'approved', 'declined'));
 
 -- Update existing records to have default price_status
 UPDATE feature_requests 

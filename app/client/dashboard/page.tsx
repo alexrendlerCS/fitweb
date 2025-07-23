@@ -63,6 +63,12 @@ export default function ClientDashboard() {
   const [isLoadingRequests, setIsLoadingRequests] = useState(false);
   const [showAllRequestsDialog, setShowAllRequestsDialog] = useState(false);
   const [approvingRequest, setApprovingRequest] = useState<string | null>(null);
+  const [currentDeclinedIndex, setCurrentDeclinedIndex] = useState(0);
+  const [allRequestsFilter, setAllRequestsFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('recent');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const router = useRouter();
 
   useEffect(() => {
@@ -257,6 +263,54 @@ export default function ClientDashboard() {
     }
   };
 
+  const getSortedRequests = () => {
+    let filtered = [...featureRequests];
+    
+    // Apply filters based on selected category
+    switch (allRequestsFilter) {
+      case 'priority':
+        if (priorityFilter !== 'all') {
+          filtered = filtered.filter(req => req.priority === priorityFilter);
+        }
+        // Sort by priority level (high, medium, low)
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        return filtered.sort((a, b) => {
+          const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] ?? 3;
+          const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] ?? 3;
+          return aPriority - bPriority;
+        });
+        
+      case 'date':
+        if (dateFilter === 'oldest') {
+          return filtered.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        } else {
+          return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        }
+        
+      case 'type':
+        if (typeFilter !== 'all') {
+          filtered = filtered.filter(req => req.feedback_type === typeFilter);
+        }
+        return filtered.sort((a, b) => a.feedback_type.localeCompare(b.feedback_type));
+        
+      case 'status':
+        if (statusFilter !== 'all') {
+          filtered = filtered.filter(req => req.status === statusFilter);
+        }
+        return filtered.sort((a, b) => a.status.localeCompare(b.status));
+        
+      case 'all':
+      default:
+        // Default priority order: in_progress, pending, completed, declined
+        const statusOrder = { in_progress: 0, pending: 1, completed: 2, declined: 3 };
+        return filtered.sort((a, b) => {
+          const aStatus = statusOrder[a.status as keyof typeof statusOrder] ?? 4;
+          const bStatus = statusOrder[b.status as keyof typeof statusOrder] ?? 4;
+          return aStatus - bStatus;
+        });
+    }
+  };
+
   // Pagination
   const requestsPerPage = 1;
   const totalPages = Math.ceil(featureRequests.length / requestsPerPage);
@@ -332,9 +386,22 @@ export default function ClientDashboard() {
                   
                   {/* Request Counts */}
                   <div className="text-sm text-gray-300 flex justify-between items-center">
-                    <span>Pending: {requestCounts.pending} requests</span>
-                    <span>Completed: {requestCounts.completed} requests</span>
-                    <span>Total: {requestCounts.total} requests</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-400 font-medium">Pending:</span>
+                      <span className="bg-yellow-900/30 px-2 py-1 rounded text-yellow-300">{requestCounts.pending}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-400 font-medium">In Progress:</span>
+                      <span className="bg-blue-900/30 px-2 py-1 rounded text-blue-300">{featureRequests.filter(req => req.status === 'in_progress').length}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-400 font-medium">Completed:</span>
+                      <span className="bg-green-900/30 px-2 py-1 rounded text-green-300">{requestCounts.completed}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-purple-400 font-medium">Total:</span>
+                      <span className="bg-purple-900/30 px-2 py-1 rounded text-purple-300">{requestCounts.total}</span>
+                    </div>
                   </div>
 
                   {/* Pending Price Approval Message */}
@@ -459,6 +526,23 @@ export default function ClientDashboard() {
                               </div>
                             </div>
                           )}
+
+                          {/* Decline Reason Display */}
+                          {request.status === 'declined' && request.admin_notes && (
+                            <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-2 mt-2">
+                              <div className="flex items-start gap-2">
+                                <X className="h-3 w-3 text-red-400 mt-0.5" />
+                                <div>
+                                  <span className="text-red-400 text-xs font-medium block mb-1">
+                                    Decline Reason:
+                                  </span>
+                                  <p className="text-red-300 text-xs">
+                                    {request.admin_notes}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                       
@@ -486,6 +570,73 @@ export default function ClientDashboard() {
                           >
                             <ChevronRight className="h-4 w-4" />
                           </Button>
+                        </div>
+                      )}
+
+                      {/* Declined Request Message */}
+                      {featureRequests.filter(req => req.status === 'declined').length > 0 && (
+                        <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-3 mt-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <X className="h-4 w-4 text-red-400" />
+                              <span className="text-red-400 text-sm font-medium">
+                                Request Declined ({featureRequests.filter(req => req.status === 'declined').length} request{featureRequests.filter(req => req.status === 'declined').length !== 1 ? 's' : ''})
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {featureRequests.filter(req => req.status === 'declined').length > 1 && (
+                                <>
+                                  <Button
+                                    onClick={() => {
+                                      const declinedRequests = featureRequests.filter(req => req.status === 'declined');
+                                      const newIndex = Math.max(0, currentDeclinedIndex - 1);
+                                      setCurrentDeclinedIndex(newIndex);
+                                      const targetRequest = declinedRequests[newIndex];
+                                      setCurrentPage(Math.ceil((featureRequests.indexOf(targetRequest) + 1) / requestsPerPage));
+                                    }}
+                                    disabled={currentDeclinedIndex === 0}
+                                    className="bg-red-600 hover:bg-red-700 text-white text-xs py-0.5 px-1 h-6 disabled:opacity-50"
+                                  >
+                                    <ChevronLeft className="h-3 w-3" />
+                                  </Button>
+                                  <span className="text-red-400 text-xs whitespace-nowrap">
+                                    {currentDeclinedIndex + 1} of {featureRequests.filter(req => req.status === 'declined').length}
+                                  </span>
+                                  <Button
+                                    onClick={() => {
+                                      const declinedRequests = featureRequests.filter(req => req.status === 'declined');
+                                      const newIndex = Math.min(declinedRequests.length - 1, currentDeclinedIndex + 1);
+                                      setCurrentDeclinedIndex(newIndex);
+                                      const targetRequest = declinedRequests[newIndex];
+                                      setCurrentPage(Math.ceil((featureRequests.indexOf(targetRequest) + 1) / requestsPerPage));
+                                    }}
+                                    disabled={currentDeclinedIndex === featureRequests.filter(req => req.status === 'declined').length - 1}
+                                    className="bg-red-600 hover:bg-red-700 text-white text-xs py-0.5 px-1 h-6 disabled:opacity-50"
+                                  >
+                                    <ChevronRight className="h-3 w-3" />
+                                  </Button>
+                                </>
+                              )}
+                              <Button
+                                onClick={() => {
+                                  const declinedRequests = featureRequests.filter(req => req.status === 'declined');
+                                  const targetRequest = declinedRequests[currentDeclinedIndex];
+                                  if (targetRequest) {
+                                    setCurrentPage(Math.ceil((featureRequests.indexOf(targetRequest) + 1) / requestsPerPage));
+                                  }
+                                }}
+                                className="bg-red-600 hover:bg-red-700 text-white text-xs py-0.5 px-3 h-6 ml-1"
+                              >
+                                View
+                              </Button>
+                            </div>
+                          </div>
+                          <p className="text-gray-300 text-xs mt-2">
+                            {featureRequests.filter(req => req.status === 'declined').length > 1 
+                              ? `You have ${featureRequests.filter(req => req.status === 'declined').length} declined requests. Use the arrows to navigate between them, then click "View" to see details.`
+                              : "One of your feature requests has been declined. Click \"View\" to see the details."
+                            }
+                          </p>
                         </div>
                       )}
                       
@@ -594,8 +745,8 @@ export default function ClientDashboard() {
               isOpen={showFeatureForm}
               onClose={() => {
                 setShowFeatureForm(false);
-                fetchFeatureRequests(); // Refresh requests after form closes
               }}
+              onRequestSubmitted={fetchFeatureRequests}
               clientEmail={client.email}
               subscriptionTier="pro" // TODO: Get from client data
             />
@@ -605,7 +756,7 @@ export default function ClientDashboard() {
           <Dialog open={showAllRequestsDialog} onOpenChange={setShowAllRequestsDialog}>
             <DialogContent className="max-w-4xl max-h-[80vh] bg-gray-900 border-gray-700">
               <DialogHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-4">
                   <DialogTitle className="text-white flex items-center gap-2">
                     <MessageSquare className="h-5 w-5 text-[#004d40]" />
                     All Feature Requests
@@ -622,12 +773,128 @@ export default function ClientDashboard() {
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
+
+                {/* Filter Options */}
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-300 text-sm">Filter by:</span>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => setAllRequestsFilter('all')}
+                      className={`text-xs px-3 py-1 h-7 ${
+                        allRequestsFilter === 'all'
+                          ? 'bg-[#004d40] text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      All
+                    </Button>
+                    <Button
+                      onClick={() => setAllRequestsFilter('priority')}
+                      className={`text-xs px-3 py-1 h-7 ${
+                        allRequestsFilter === 'priority'
+                          ? 'bg-[#004d40] text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      Priority
+                    </Button>
+                    <Button
+                      onClick={() => setAllRequestsFilter('date')}
+                      className={`text-xs px-3 py-1 h-7 ${
+                        allRequestsFilter === 'date'
+                          ? 'bg-[#004d40] text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      Date
+                    </Button>
+                    <Button
+                      onClick={() => setAllRequestsFilter('type')}
+                      className={`text-xs px-3 py-1 h-7 ${
+                        allRequestsFilter === 'type'
+                          ? 'bg-[#004d40] text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      Type
+                    </Button>
+                    <Button
+                      onClick={() => setAllRequestsFilter('status')}
+                      className={`text-xs px-3 py-1 h-7 ${
+                        allRequestsFilter === 'status'
+                          ? 'bg-[#004d40] text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      Status
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Filter Dropdowns */}
+                {allRequestsFilter !== 'all' && (
+                  <div className="flex items-center gap-3 mt-2">
+                    <span className="text-gray-400 text-xs">Options:</span>
+                    
+                    {allRequestsFilter === 'priority' && (
+                      <select
+                        value={priorityFilter}
+                        onChange={(e) => setPriorityFilter(e.target.value)}
+                        className="bg-gray-800 border border-gray-600 text-white text-xs rounded px-2 py-1"
+                      >
+                        <option value="all">All Priorities</option>
+                        <option value="high">High Priority</option>
+                        <option value="medium">Medium Priority</option>
+                        <option value="low">Low Priority</option>
+                      </select>
+                    )}
+                    
+                    {allRequestsFilter === 'date' && (
+                      <select
+                        value={dateFilter}
+                        onChange={(e) => setDateFilter(e.target.value)}
+                        className="bg-gray-800 border border-gray-600 text-white text-xs rounded px-2 py-1"
+                      >
+                        <option value="recent">Most Recent</option>
+                        <option value="oldest">Oldest First</option>
+                      </select>
+                    )}
+                    
+                    {allRequestsFilter === 'type' && (
+                      <select
+                        value={typeFilter}
+                        onChange={(e) => setTypeFilter(e.target.value)}
+                        className="bg-gray-800 border border-gray-600 text-white text-xs rounded px-2 py-1"
+                      >
+                        <option value="all">All Types</option>
+                        <option value="bug">Bug</option>
+                        <option value="comment">Comment</option>
+                        <option value="edit">Edit</option>
+                        <option value="feature">Feature</option>
+                      </select>
+                    )}
+                    
+                    {allRequestsFilter === 'status' && (
+                      <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="bg-gray-800 border border-gray-600 text-white text-xs rounded px-2 py-1"
+                      >
+                        <option value="all">All Statuses</option>
+                        <option value="completed">Completed</option>
+                        <option value="declined">Declined</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="pending">Pending</option>
+                      </select>
+                    )}
+                  </div>
+                )}
               </DialogHeader>
 
               <div className="overflow-y-auto max-h-[60vh]">
                 {featureRequests.length > 0 ? (
                   <div className="space-y-4">
-                    {featureRequests.map((request) => (
+                    {getSortedRequests().map((request) => (
                       <div key={request.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-2">
@@ -655,7 +922,7 @@ export default function ClientDashboard() {
                           </p>
                         )}
                         
-                        <div className="flex items-center justify-between text-gray-500 text-xs">
+                        <div className="flex items-center justify-between text-gray-500 text-xs mb-2">
                           <span>Submitted: {formatDate(request.created_at)}</span>
                           <div className="flex items-center gap-4">
                             {request.estimated_cost && (
@@ -666,6 +933,74 @@ export default function ClientDashboard() {
                             <span>Request ID: {request.id.slice(0, 8)}...</span>
                           </div>
                         </div>
+
+                        {/* Price Approval Buttons for Pending Requests */}
+                        {request.price_status === 'pending_approval' && request.estimated_cost && (
+                          <div className="flex gap-2 mt-3">
+                            <Button
+                              onClick={() => handleApprovePrice(request.id)}
+                              disabled={approvingRequest === request.id}
+                              className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-1"
+                            >
+                              {approvingRequest === request.id ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                              ) : (
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                              )}
+                              Approve ${request.estimated_cost}
+                            </Button>
+                            <Button
+                              onClick={() => handleDeclinePrice(request.id)}
+                              disabled={approvingRequest === request.id}
+                              className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs py-1"
+                            >
+                              {approvingRequest === request.id ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                              ) : (
+                                <X className="h-3 w-3 mr-1" />
+                              )}
+                              Decline
+                            </Button>
+                          </div>
+                        )}
+
+                        {/* Admin Notes for Pending Requests */}
+                        {request.price_status === 'pending_approval' && request.admin_notes && (
+                          <div className="bg-gray-700 rounded p-2 mt-2">
+                            <p className="text-gray-300 text-xs">
+                              <span className="font-medium">Admin Notes:</span> {request.admin_notes}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Approved Cost Display */}
+                        {request.approved_cost && (
+                          <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-2 mt-2">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="h-3 w-3 text-green-400" />
+                              <span className="text-green-400 text-xs font-medium">
+                                Approved Cost: ${request.approved_cost}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Decline Reason Display */}
+                        {request.status === 'declined' && request.admin_notes && (
+                          <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-2 mt-2">
+                            <div className="flex items-start gap-2">
+                              <X className="h-3 w-3 text-red-400 mt-0.5" />
+                              <div>
+                                <span className="text-red-400 text-xs font-medium block mb-1">
+                                  Decline Reason:
+                                </span>
+                                <p className="text-red-300 text-xs">
+                                  {request.admin_notes}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { X, Send, Loader2, AlertTriangle } from "lucide-react";
+import { X, Send, Loader2, AlertTriangle, CheckCircle, ExternalLink } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface FeatureRequestFormProps {
@@ -15,15 +15,19 @@ interface FeatureRequestFormProps {
   onClose: () => void;
   clientEmail: string;
   subscriptionTier: string;
+  onRequestSubmitted?: () => void;
 }
 
 export default function FeatureRequestForm({ 
   isOpen, 
   onClose, 
   clientEmail, 
-  subscriptionTier 
+  subscriptionTier,
+  onRequestSubmitted
 }: FeatureRequestFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [submittedRequest, setSubmittedRequest] = useState<any>(null);
   const [formData, setFormData] = useState({
     pageUrl: "",
     feedbackType: "",
@@ -59,17 +63,25 @@ export default function FeatureRequestForm({
       });
 
       if (response.ok) {
-        toast({
-          title: "Request Submitted",
-          description: "Your feature request has been submitted successfully!",
-        });
+        const result = await response.json();
+        setSubmittedRequest(result.featureRequest);
         setFormData({
           pageUrl: "",
           feedbackType: "",
           description: "",
           priority: ""
         });
+        // Close the form dialog first, then show success dialog
         onClose();
+        // Call the callback to refresh requests
+        if (onRequestSubmitted) {
+          onRequestSubmitted();
+        }
+        // Small delay to ensure form dialog is closed before showing success
+        setTimeout(() => {
+          console.log('Showing success dialog');
+          setShowSuccessDialog(true);
+        }, 100);
       } else {
         const error = await response.json();
         throw new Error(error.message || 'Failed to submit request');
@@ -93,8 +105,9 @@ export default function FeatureRequestForm({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-700">
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-700">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-white text-xl font-bold">
@@ -260,5 +273,78 @@ export default function FeatureRequestForm({
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Success Dialog */}
+    <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+      <DialogContent className="max-w-md bg-gray-900 border-green-600">
+        <DialogHeader>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-shrink-0">
+              <CheckCircle className="h-8 w-8 text-green-400" />
+            </div>
+            <div>
+              <DialogTitle className="text-white text-xl font-bold">
+                Request Submitted Successfully!
+              </DialogTitle>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+            <h4 className="font-semibold text-white mb-2">Request Details:</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Type:</span>
+                <span className="text-white capitalize">{submittedRequest?.feedback_type}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Priority:</span>
+                <span className="text-white capitalize">{submittedRequest?.priority}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Status:</span>
+                <span className="text-white capitalize">{submittedRequest?.status}</span>
+              </div>
+              {submittedRequest?.page_url && (
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Page:</span>
+                  <span className="text-white text-xs">{submittedRequest.page_url}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <ExternalLink className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" />
+              <div className="text-blue-100">
+                <h4 className="font-semibold mb-2">Track Your Request</h4>
+                <p className="text-sm text-blue-200 leading-relaxed">
+                  You can track the progress of this request in your dashboard. 
+                  {submittedRequest?.feedback_type === 'feature' && (
+                    <span className="block mt-1">
+                      For feature requests, you'll be notified when a price estimate is ready for your approval.
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button
+              onClick={() => {
+                setShowSuccessDialog(false);
+              }}
+              className="flex-1 bg-gradient-to-r from-[#004d40] to-[#00695c] hover:from-[#00695c] hover:to-[#004d40] text-white"
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 } 

@@ -35,13 +35,13 @@ export default function HeroSection() {
                   <CheckCircle className="h-7 w-7 text-white" />
                 </div>
                 <div className="mb-2 text-white font-bold text-lg text-center">Already know<br />what you want?</div>
-                <Button
+            <Button
                   asChild
-                  size="lg"
+              size="lg"
                   className="w-full bg-gradient-to-r from-[#004d40] to-[#00695c] hover:from-[#00695c] hover:to-[#004d40] text-white px-6 py-3 text-base rounded-xl shadow-lg font-bold mt-auto hover:shadow-xl hover:shadow-[#004d40]/30 transition-all duration-300 hover:scale-105"
-                >
+            >
                   <a href="/#packages">Apply Now</a>
-                </Button>
+            </Button>
               </div>
             </div>
           </div>
