@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
   MessageSquare, 
   ArrowLeft,
@@ -18,7 +20,9 @@ import {
   CheckCircle,
   AlertTriangle,
   X,
-  DollarSign
+  DollarSign,
+  Eye,
+  ChevronDown
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -35,6 +39,8 @@ interface FeatureRequest {
   subscription_tier: string;
   estimated_cost?: number;
   approved_cost?: number;
+  admin_notes?: string;
+  price_status?: string;
 }
 
 export default function AdminRequests() {
@@ -45,6 +51,12 @@ export default function AdminRequests() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [selectedRequest, setSelectedRequest] = useState<FeatureRequest | null>(null);
+  const [isDescriptionDialogOpen, setIsDescriptionDialogOpen] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [editingPrice, setEditingPrice] = useState<string | null>(null);
+  const [priceValue, setPriceValue] = useState<string>('');
+  const [adminNotes, setAdminNotes] = useState<string>('');
 
   useEffect(() => {
     fetchRequests();
@@ -94,15 +106,20 @@ export default function AdminRequests() {
     setFilteredRequests(filtered);
   };
 
-  const getPriorityScore = (tier: string, priority: string) => {
+  const getPriorityScore = (tier: string, priority: string, status: string) => {
+    // If status is completed or declined, return 0 to push to bottom
+    if (status === 'completed' || status === 'declined') {
+      return 0;
+    }
+    
     const tierScores = { elite: 100, pro: 50, starter: 10 };
     const priorityScores = { high: 30, medium: 20, low: 10 };
     return (tierScores[tier as keyof typeof tierScores] || 0) + (priorityScores[priority as keyof typeof priorityScores] || 0);
   };
 
   const sortedRequests = [...filteredRequests].sort((a, b) => {
-    const scoreA = getPriorityScore(a.subscription_tier, a.priority);
-    const scoreB = getPriorityScore(b.subscription_tier, b.priority);
+    const scoreA = getPriorityScore(a.subscription_tier, a.priority, a.status);
+    const scoreB = getPriorityScore(b.subscription_tier, b.priority, b.status);
     return scoreB - scoreA; // Highest priority first
   });
 
@@ -162,6 +179,108 @@ export default function AdminRequests() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const truncateDescription = (description: string, maxLength: number = 50) => {
+    if (description.length <= maxLength) {
+      return description;
+    }
+    return description.substring(0, maxLength) + '...';
+  };
+
+  const handleDescriptionClick = (request: FeatureRequest) => {
+    setSelectedRequest(request);
+    setIsDescriptionDialogOpen(true);
+  };
+
+  const handleStatusChange = async (requestId: string, newStatus: string) => {
+    setUpdatingStatus(requestId);
+    try {
+      const response = await fetch('/api/admin/feature-requests', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: requestId,
+          status: newStatus
+        })
+      });
+
+      if (response.ok) {
+        // Update the local state
+        setRequests(prevRequests => 
+          prevRequests.map(request => 
+            request.id === requestId 
+              ? { ...request, status: newStatus }
+              : request
+          )
+        );
+      } else {
+        console.error('Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
+  const handlePriceEdit = (request: FeatureRequest) => {
+    setEditingPrice(request.id);
+    setPriceValue(request.estimated_cost?.toString() || '250');
+    setAdminNotes(request.admin_notes || '');
+  };
+
+  const handlePriceSave = async (requestId: string) => {
+    if (!priceValue || isNaN(Number(priceValue))) {
+      alert('Please enter a valid price');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/feature-requests', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: requestId,
+          estimated_cost: Number(priceValue),
+          admin_notes: adminNotes,
+          price_status: 'pending_approval'
+        })
+      });
+
+      if (response.ok) {
+        // Update the local state
+        setRequests(prevRequests => 
+          prevRequests.map(request => 
+            request.id === requestId 
+              ? { 
+                  ...request, 
+                  estimated_cost: Number(priceValue),
+                  admin_notes: adminNotes,
+                  price_status: 'pending_approval'
+                }
+              : request
+          )
+        );
+        setEditingPrice(null);
+        setPriceValue('');
+        setAdminNotes('');
+      } else {
+        console.error('Failed to update price');
+      }
+    } catch (error) {
+      console.error('Error updating price:', error);
+    }
+  };
+
+  const handlePriceCancel = () => {
+    setEditingPrice(null);
+    setPriceValue('');
+    setAdminNotes('');
   };
 
   return (
@@ -250,6 +369,105 @@ export default function AdminRequests() {
           </CardContent>
         </Card>
 
+        {/* Pending Price Approval Section */}
+        {sortedRequests.filter(req => req.price_status === 'pending_approval').length > 0 && (
+          <Card className="bg-gray-900 border-yellow-600 mb-6">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-yellow-400" />
+                Pending Price Approval ({sortedRequests.filter(req => req.price_status === 'pending_approval').length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {sortedRequests
+                  .filter(req => req.price_status === 'pending_approval')
+                  .map((request) => (
+                    <div key={request.id} className="bg-gray-800 rounded-lg p-4 border border-yellow-600/30">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Badge className={`${getPriorityColor(request.priority)} text-white`}>
+                              {request.priority}
+                            </Badge>
+                            <Badge className={`${getTierColor(request.subscription_tier)} text-white`}>
+                              {request.subscription_tier}
+                            </Badge>
+                            <span className="text-sm text-gray-400">{request.client_email}</span>
+                          </div>
+                          <h3 className="font-medium text-white mb-1">{request.title}</h3>
+                          <p className="text-sm text-gray-400 mb-3">
+                            {truncateDescription(request.description, 100)}
+                          </p>
+                          
+                          {editingPrice === request.id ? (
+                            <div className="space-y-3">
+                              <div className="flex gap-3">
+                                <div className="flex-1">
+                                  <label className="text-sm text-gray-300 mb-1 block">Estimated Cost ($)</label>
+                                  <Input
+                                    type="number"
+                                    value={priceValue}
+                                    onChange={(e) => setPriceValue(e.target.value)}
+                                    className="bg-gray-700 border-gray-600 text-white"
+                                    placeholder="250"
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <label className="text-sm text-gray-300 mb-1 block">Admin Notes</label>
+                                  <Input
+                                    value={adminNotes}
+                                    onChange={(e) => setAdminNotes(e.target.value)}
+                                    className="bg-gray-700 border-gray-600 text-white"
+                                    placeholder="Explain the pricing..."
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => handlePriceSave(request.id)}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  Save & Send for Approval
+                                </Button>
+                                <Button
+                                  onClick={handlePriceCancel}
+                                  variant="outline"
+                                  className="border-gray-600 text-gray-300"
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm text-gray-300">
+                                  <span className="text-yellow-400 font-medium">${request.estimated_cost}</span> estimated
+                                </p>
+                                {request.admin_notes && (
+                                  <p className="text-xs text-gray-400 mt-1">{request.admin_notes}</p>
+                                )}
+                              </div>
+                              <Button
+                                onClick={() => handlePriceEdit(request)}
+                                variant="outline"
+                                size="sm"
+                                className="border-yellow-600 text-yellow-400 hover:bg-yellow-600 hover:text-white"
+                              >
+                                Edit Price
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Requests Table */}
         <Card className="bg-gray-900 border-gray-700">
           <CardHeader>
@@ -298,9 +516,19 @@ export default function AdminRequests() {
                         <td className="py-4 px-4">
                           <div>
                             <p className="font-medium text-white">{request.title}</p>
-                            <p className="text-sm text-gray-400 line-clamp-1 max-w-xs">
-                              {request.description}
-                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <p 
+                                className={`text-sm text-gray-400 max-w-xs cursor-pointer hover:text-white transition-colors ${
+                                  request.description.length > 50 ? 'hover:underline' : ''
+                                }`}
+                                onClick={() => handleDescriptionClick(request)}
+                              >
+                                {truncateDescription(request.description, 50)}
+                              </p>
+                              {request.description.length > 50 && (
+                                <Eye className="h-3 w-3 text-gray-500 hover:text-white cursor-pointer" />
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="py-4 px-4">
@@ -312,10 +540,55 @@ export default function AdminRequests() {
                           </Badge>
                         </td>
                         <td className="py-4 px-4">
-                          <Badge className={`${getStatusColor(request.status)} text-white`}>
-                            {getStatusIcon(request.status)}
-                            {request.status}
-                          </Badge>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                className={`p-0 h-auto ${updatingStatus === request.id ? 'opacity-50' : ''}`}
+                                disabled={updatingStatus === request.id}
+                              >
+                                <Badge className={`${getStatusColor(request.status)} text-white cursor-pointer hover:opacity-80 transition-opacity`}>
+                                  {updatingStatus === request.id ? (
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                  ) : (
+                                    getStatusIcon(request.status)
+                                  )}
+                                  {request.status}
+                                  <ChevronDown className="h-3 w-3 ml-1" />
+                                </Badge>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="bg-gray-800 border-gray-600">
+                              <DropdownMenuItem 
+                                onClick={() => handleStatusChange(request.id, 'pending')}
+                                className="text-white hover:bg-gray-700 cursor-pointer"
+                              >
+                                <AlertTriangle className="h-4 w-4 mr-2 text-yellow-400" />
+                                Pending
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleStatusChange(request.id, 'in_progress')}
+                                className="text-white hover:bg-gray-700 cursor-pointer"
+                              >
+                                <Clock className="h-4 w-4 mr-2 text-blue-400" />
+                                In Progress
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleStatusChange(request.id, 'completed')}
+                                className="text-white hover:bg-gray-700 cursor-pointer"
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2 text-green-400" />
+                                Completed
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleStatusChange(request.id, 'declined')}
+                                className="text-white hover:bg-gray-700 cursor-pointer"
+                              >
+                                <X className="h-4 w-4 mr-2 text-red-400" />
+                                Declined
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-1">
@@ -351,6 +624,83 @@ export default function AdminRequests() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Description Dialog */}
+      <Dialog open={isDescriptionDialogOpen} onOpenChange={setIsDescriptionDialogOpen}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-[#004d40]" />
+              Feature Request Details
+            </DialogTitle>
+          </DialogHeader>
+          {selectedRequest && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-white mb-2">Title</h3>
+                <p className="text-gray-300">{selectedRequest.title}</p>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold text-white mb-2">Description</h3>
+                <p className="text-gray-300 whitespace-pre-wrap">{selectedRequest.description}</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold text-white mb-2">Client</h3>
+                  <p className="text-gray-300">{selectedRequest.client_email}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white mb-2">Subscription Tier</h3>
+                  <Badge className={`${getTierColor(selectedRequest.subscription_tier)} text-white`}>
+                    {selectedRequest.subscription_tier}
+                  </Badge>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white mb-2">Priority</h3>
+                  <Badge className={`${getPriorityColor(selectedRequest.priority)} text-white`}>
+                    {selectedRequest.priority}
+                  </Badge>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white mb-2">Status</h3>
+                  <Badge className={`${getStatusColor(selectedRequest.status)} text-white`}>
+                    {selectedRequest.status}
+                  </Badge>
+                </div>
+              </div>
+              
+              {selectedRequest.page_url && (
+                <div>
+                  <h3 className="font-semibold text-white mb-2">Page URL</h3>
+                  <p className="text-gray-300 break-all">{selectedRequest.page_url}</p>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                {selectedRequest.estimated_cost && (
+                  <div>
+                    <h3 className="font-semibold text-white mb-2">Estimated Cost</h3>
+                    <p className="text-yellow-400">${selectedRequest.estimated_cost}</p>
+                  </div>
+                )}
+                {selectedRequest.approved_cost && (
+                  <div>
+                    <h3 className="font-semibold text-white mb-2">Approved Cost</h3>
+                    <p className="text-green-400">${selectedRequest.approved_cost}</p>
+                  </div>
+                )}
+              </div>
+              
+              <div>
+                <h3 className="font-semibold text-white mb-2">Submitted</h3>
+                <p className="text-gray-300">{formatDate(selectedRequest.created_at)}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

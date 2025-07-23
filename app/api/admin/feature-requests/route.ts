@@ -19,6 +19,14 @@ export async function GET(request: NextRequest) {
 
     // Calculate priority scores and sort
     const requestsWithScores = requests.map(request => {
+      // If status is completed or declined, return 0 to push to bottom
+      if (request.status === 'completed' || request.status === 'declined') {
+        return {
+          ...request,
+          priority_score: 0
+        };
+      }
+      
       const tierScores = { elite: 100, pro: 50, starter: 10 };
       const priorityScores = { high: 30, medium: 20, low: 10 };
       
@@ -73,7 +81,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { id, status, approved_cost, admin_notes } = await request.json();
+    const { id, status, approved_cost, admin_notes, estimated_cost, price_status } = await request.json();
 
     if (!id) {
       return NextResponse.json(
@@ -86,6 +94,8 @@ export async function PUT(request: NextRequest) {
     if (status) updateData.status = status;
     if (approved_cost !== undefined) updateData.approved_cost = approved_cost;
     if (admin_notes !== undefined) updateData.admin_notes = admin_notes;
+    if (estimated_cost !== undefined) updateData.estimated_cost = estimated_cost;
+    if (price_status !== undefined) updateData.price_status = price_status;
 
     const { data: updatedRequest, error } = await supabase
       .from('feature_requests')

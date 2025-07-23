@@ -190,8 +190,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Set estimated cost for feature requests
+    // Set estimated cost and price status for feature requests
     const estimatedCost = feedbackType === 'feature' ? 250 : null;
+    const priceStatus = feedbackType === 'feature' ? 'pending_approval' : 'not_set';
 
     // Insert feature request using service role to bypass RLS
     const { data: featureRequest, error: insertError } = await supabase
@@ -206,7 +207,8 @@ export async function POST(request: NextRequest) {
         description: description.trim(),
         priority: priority,
         status: 'pending',
-        estimated_cost: estimatedCost
+        estimated_cost: estimatedCost,
+        price_status: priceStatus
       })
       .select()
       .single();

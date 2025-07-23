@@ -49,6 +49,8 @@ interface FeatureRequest {
   created_at: string;
   estimated_cost?: number;
   approved_cost?: number;
+  admin_notes?: string;
+  price_status?: string;
 }
 
 export default function ClientDashboard() {
@@ -60,6 +62,7 @@ export default function ClientDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingRequests, setIsLoadingRequests] = useState(false);
   const [showAllRequestsDialog, setShowAllRequestsDialog] = useState(false);
+  const [approvingRequest, setApprovingRequest] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -202,6 +205,58 @@ export default function ClientDashboard() {
     });
   };
 
+  const handleApprovePrice = async (requestId: string) => {
+    setApprovingRequest(requestId);
+    try {
+      const response = await fetch('/api/feature-requests/approve-price', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: requestId
+        })
+      });
+
+      if (response.ok) {
+        // Refresh the feature requests
+        await fetchFeatureRequests();
+      } else {
+        console.error('Failed to approve price');
+      }
+    } catch (error) {
+      console.error('Error approving price:', error);
+    } finally {
+      setApprovingRequest(null);
+    }
+  };
+
+  const handleDeclinePrice = async (requestId: string) => {
+    setApprovingRequest(requestId);
+    try {
+      const response = await fetch('/api/feature-requests/decline-price', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: requestId
+        })
+      });
+
+      if (response.ok) {
+        // Refresh the feature requests
+        await fetchFeatureRequests();
+      } else {
+        console.error('Failed to decline price');
+      }
+    } catch (error) {
+      console.error('Error declining price:', error);
+    } finally {
+      setApprovingRequest(null);
+    }
+  };
+
   // Pagination
   const requestsPerPage = 1;
   const totalPages = Math.ceil(featureRequests.length / requestsPerPage);
@@ -276,11 +331,39 @@ export default function ClientDashboard() {
                   </Button>
                   
                   {/* Request Counts */}
-                  <div className="text-sm text-gray-300 space-y-1">
-                    <p>Pending: {requestCounts.pending} requests</p>
-                    <p>Completed: {requestCounts.completed} requests</p>
-                    <p>Total: {requestCounts.total} requests</p>
+                  <div className="text-sm text-gray-300 flex justify-between items-center">
+                    <span>Pending: {requestCounts.pending} requests</span>
+                    <span>Completed: {requestCounts.completed} requests</span>
+                    <span>Total: {requestCounts.total} requests</span>
                   </div>
+
+                  {/* Pending Price Approval Message */}
+                  {featureRequests.filter(req => req.price_status === 'pending_approval').length > 0 && (
+                    <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 text-yellow-400" />
+                          <span className="text-yellow-400 text-sm font-medium">
+                            Price Approval Required ({featureRequests.filter(req => req.price_status === 'pending_approval').length} request{featureRequests.filter(req => req.price_status === 'pending_approval').length !== 1 ? 's' : ''})
+                          </span>
+                        </div>
+                        <Button
+                          onClick={() => {
+                            const pendingRequest = featureRequests.find(req => req.price_status === 'pending_approval');
+                            if (pendingRequest) {
+                              setCurrentPage(Math.ceil((featureRequests.indexOf(pendingRequest) + 1) / requestsPerPage));
+                            }
+                          }}
+                          className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs py-0.5 px-4 h-6"
+                        >
+                          View
+                        </Button>
+                      </div>
+                      <p className="text-gray-300 text-xs">
+                        You have feature requests waiting for your price approval. Please review the estimated costs below.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Feature Request Cards */}
                   {isLoadingRequests ? (
@@ -325,6 +408,57 @@ export default function ClientDashboard() {
                               </span>
                             )}
                           </div>
+                          
+                          {/* Price Approval Buttons for Pending Requests */}
+                          {request.price_status === 'pending_approval' && request.estimated_cost && (
+                            <div className="flex gap-2 mt-2">
+                              <Button
+                                onClick={() => handleApprovePrice(request.id)}
+                                disabled={approvingRequest === request.id}
+                                className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-1"
+                              >
+                                {approvingRequest === request.id ? (
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                ) : (
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                )}
+                                Approve ${request.estimated_cost}
+                              </Button>
+                              <Button
+                                onClick={() => handleDeclinePrice(request.id)}
+                                disabled={approvingRequest === request.id}
+                                className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs py-1"
+                              >
+                                {approvingRequest === request.id ? (
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                ) : (
+                                  <X className="h-3 w-3 mr-1" />
+                                )}
+                                Decline
+                              </Button>
+                            </div>
+                          )}
+                          
+                          {/* Admin Notes for Pending Requests */}
+                          {request.price_status === 'pending_approval' && request.admin_notes && (
+                            <div className="bg-gray-800 rounded p-2 mt-2">
+                              <p className="text-gray-400 text-xs">
+                                <span className="font-medium">Admin Notes:</span> {request.admin_notes}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {/* Approved Cost Display */}
+                          {request.approved_cost && (
+                            <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-2 mt-2">
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className="h-3 w-3 text-green-400" />
+                                <span className="text-green-400 text-xs font-medium">
+                                  Approved Cost: ${request.approved_cost}
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                       
