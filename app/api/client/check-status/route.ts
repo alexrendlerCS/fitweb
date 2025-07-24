@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     // First, check if there's an approved trainer application
     const { data: application, error: appError } = await supabase
       .from('trainer_applications')
-      .select('status')
+      .select('status, selected_tier')
       .eq('email', email.toLowerCase())
       .eq('status', 'approved')
       .single();
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     // Check if client exists in the clients table
     const { data: client, error } = await supabase
       .from('clients')
-      .select('id, email, project_status, password_hash')
+      .select('id, email, project_status, password_hash, subscription_tier')
       .eq('email', email.toLowerCase())
       .single();
 
@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
         hasPassword: false,
         canAccess: true,
         projectStatus: 'approved',
+        subscriptionTier: application.selected_tier,
         message: 'Project approved! You can set up your account to access the dashboard.'
       });
     }
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
         hasPassword,
         canAccess: false,
         projectStatus: client.project_status,
+        subscriptionTier: client.subscription_tier || application.selected_tier,
         message: 'Project is still pending approval.'
       });
     }
@@ -70,6 +72,7 @@ export async function POST(request: NextRequest) {
       hasPassword,
       canAccess: true,
       projectStatus: client.project_status,
+      subscriptionTier: client.subscription_tier || application.selected_tier,
       message: hasPassword 
         ? 'Project approved! You can access your dashboard.' 
         : 'Please set up your password to access the dashboard.'

@@ -17,12 +17,13 @@ export async function POST(request: NextRequest) {
     // Check if there's an approved application
     const { data: application } = await supabase
       .from('trainer_applications')
-      .select('status')
+      .select('status, selected_tier')
       .eq('email', email.toLowerCase())
       .eq('status', 'approved')
       .single();
 
     const projectStatus = application ? 'approved' : 'pending';
+    const subscriptionTier = application?.selected_tier || 'pro'; // Default to pro if no application found
 
     // Hash the password
     const saltRounds = 12;
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
           password_hash: passwordHash,
           full_name: fullName || null,
           project_status: projectStatus,
+          subscription_tier: subscriptionTier, // Add subscription tier
           updated_at: new Date().toISOString()
         })
         .eq('email', email.toLowerCase());
@@ -61,7 +63,8 @@ export async function POST(request: NextRequest) {
           email: email.toLowerCase(),
           password_hash: passwordHash,
           full_name: fullName || null,
-          project_status: projectStatus
+          project_status: projectStatus,
+          subscription_tier: subscriptionTier // Add subscription tier
         });
 
       if (insertError) throw insertError;

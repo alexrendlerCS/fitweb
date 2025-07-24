@@ -78,79 +78,235 @@ export async function POST(request: NextRequest) {
     console.log("Checking email conditions:", { status, zoomLink });
     if (status === 'approved' && zoomLink) {
       console.log("Sending approval email...");
+      
+      // Validate that we're not sending to the admin email
+      if (application.email === 'alexrendler@yahoo.com') {
+        console.warn("WARNING: Attempting to send approval email to admin email address:", application.email);
+        console.warn("This might be a test application. Email will still be sent but please verify the recipient.");
+      }
+      
       // Send approval email with zoom link
       const approvalEmailContent = `
-Dear ${application.full_name},
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Application Approved</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #004d40 0%, #00695c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+            .field { margin-bottom: 20px; }
+            .label { font-weight: bold; color: #004d40; margin-bottom: 5px; }
+            .value { background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #004d40; }
+            .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: bold; }
+            .tier-elite { background-color: #7c3aed; }
+            .tier-pro { background-color: #3b82f6; }
+            .tier-starter { background-color: #6b7280; }
+            .zoom-link { background: #e8f5e8; border: 2px solid #10b981; padding: 15px; border-radius: 8px; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6; color: #6c757d; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="margin: 0; font-size: 28px;">🎉 Application Approved!</h1>
+              <p style="margin: 10px 0 0 0; opacity: 0.9;">Welcome to FitWeb Studio</p>
+            </div>
+            
+            <div class="content">
+              <div class="field">
+                <div class="label">👤 Client Information</div>
+                <div class="value">
+                  <strong>Name:</strong> ${application.full_name}<br>
+                  <strong>Business:</strong> ${application.business_name}<br>
+                  <strong>Package:</strong> 
+                  <span class="badge tier-${application.selected_tier}">${application.selected_tier.toUpperCase()}</span>
+                </div>
+              </div>
 
-Great news! Your FitWeb Studio application has been approved! 🎉
+              <div class="field">
+                <div class="label">📅 Your Zoom Meeting</div>
+                <div class="zoom-link">
+                  <strong>Meeting Link:</strong><br>
+                  <a href="${zoomLink}" style="color: #004d40; text-decoration: none; font-weight: bold;">${zoomLink}</a>
+                </div>
+              </div>
 
-We're excited to work with you on your fitness business website. Let's schedule a call to discuss your project in detail.
+              <div class="field">
+                <div class="label">📋 What to Expect</div>
+                <div class="value">
+                  • We'll discuss your business goals and requirements<br>
+                  • I'll provide a detailed project scope and timeline<br>
+                  • We'll agree on the final pricing and payment terms<br>
+                  • I'll answer any questions you have about the process
+                </div>
+              </div>
 
-**Your Zoom Meeting Link:**
-${zoomLink}
+              <div class="field">
+                <div class="label">🎯 Your Goals</div>
+                <div class="value">
+                  ${application.goals}
+                </div>
+              </div>
 
-**What to expect during our call:**
-• We'll discuss your business goals and requirements
-• I'll provide a detailed project scope and timeline
-• We'll agree on the final pricing and payment terms
-• I'll answer any questions you have about the process
+              ${application.preferred_times && application.preferred_times.length > 0 ? `
+              <div class="field">
+                <div class="label">⏰ Your Preferred Times</div>
+                <div class="value">
+                  ${application.preferred_times.map((time, index) => `${index + 1}. ${time.day} - ${time.time}`).join('<br>')}
+                </div>
+              </div>
+              ` : ''}
 
-**Your Application Details:**
-• Business: ${application.business_name}
-• Package: ${application.selected_tier.toUpperCase()}
-• Goals: ${application.goals}
+              <div class="field">
+                <div class="label">📊 Application Details</div>
+                <div class="value">
+                  <strong>Application ID:</strong> ${application.id}<br>
+                  <strong>Status:</strong> <span class="badge" style="background-color: #10b981;">APPROVED</span><br>
+                  <strong>Submitted:</strong> ${new Date(application.created_at).toLocaleString()}
+                </div>
+              </div>
+            </div>
 
-Please let me know if you need to reschedule or if you have any questions before our call.
-
-Looking forward to working with you!
-
-Best regards,
-Alex Rendler
-FitWeb Studio
-      `.trim();
+            <div class="footer">
+              <p>Please let me know if you need to reschedule or if you have any questions before our call.</p>
+              <p>Looking forward to working with you!</p>
+              <p><strong>Best regards,<br>Alex Rendler<br>FitWeb Studio</strong></p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
 
       try {
         console.log("Sending email to:", application.email);
-        await resend.emails.send({
-          from: 'FitWeb Studio <alex@fitwebstudio.com>',
+        console.log("Email content preview:", approvalEmailContent.substring(0, 200) + "...");
+        
+        const emailResult = await resend.emails.send({
+          from: 'FitWeb Studio <onboarding@resend.dev>',
           to: [application.email],
           subject: '🎉 Your FitWeb Studio Application is Approved!',
           text: approvalEmailContent,
           html: approvalEmailContent.replace(/\n/g, '<br>'),
         });
-        console.log("Approval email sent successfully");
+        
+        console.log("Approval email sent successfully to:", application.email);
+        console.log("Email result:", emailResult);
       } catch (emailError) {
         console.error('Error sending approval email:', emailError);
+        console.error('Email error details:', {
+          to: application.email,
+          from: 'FitWeb Studio <onboarding@resend.dev>',
+          error: emailError
+        });
         // Don't fail the request if email fails
       }
     } else if (status === 'rejected') {
       // Send rejection email
+      
+      // Validate that we're not sending to the admin email
+      if (application.email === 'alexrendler@yahoo.com') {
+        console.warn("WARNING: Attempting to send rejection email to admin email address:", application.email);
+        console.warn("This might be a test application. Email will still be sent but please verify the recipient.");
+      }
+      
       const rejectionEmailContent = `
-Dear ${application.full_name},
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Application Update</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+            .field { margin-bottom: 20px; }
+            .label { font-weight: bold; color: #dc2626; margin-bottom: 5px; }
+            .value { background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #dc2626; }
+            .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: bold; }
+            .tier-elite { background-color: #7c3aed; }
+            .tier-pro { background-color: #3b82f6; }
+            .tier-starter { background-color: #6b7280; }
+            .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6; color: #6c757d; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="margin: 0; font-size: 28px;">📋 Application Update</h1>
+              <p style="margin: 10px 0 0 0; opacity: 0.9;">Thank you for your interest in FitWeb Studio</p>
+            </div>
+            
+            <div class="content">
+              <div class="field">
+                <div class="label">👤 Application Information</div>
+                <div class="value">
+                  <strong>Name:</strong> ${application.full_name}<br>
+                  <strong>Business:</strong> ${application.business_name}<br>
+                  <strong>Package:</strong> 
+                  <span class="badge tier-${application.selected_tier}">${application.selected_tier.toUpperCase()}</span>
+                </div>
+              </div>
 
-Thank you for your interest in FitWeb Studio and for taking the time to submit your application.
+              <div class="field">
+                <div class="label">📝 Application Status</div>
+                <div class="value">
+                  <span class="badge" style="background-color: #dc2626;">NOT APPROVED</span><br><br>
+                  Thank you for your interest in FitWeb Studio and for taking the time to submit your application.<br><br>
+                  After careful review of your application, I regret to inform you that we are unable to move forward with your project at this time.<br><br>
+                  This decision is based on various factors including current workload, project scope alignment, and business fit. Please note that this is not a reflection of your business or the value of your project.
+                </div>
+              </div>
 
-After careful review of your application, I regret to inform you that we are unable to move forward with your project at this time.
+              <div class="field">
+                <div class="label">🎯 Your Goals</div>
+                <div class="value">
+                  ${application.goals}
+                </div>
+              </div>
 
-This decision is based on various factors including current workload, project scope alignment, and business fit. Please note that this is not a reflection of your business or the value of your project.
+              <div class="field">
+                <div class="label">📊 Application Details</div>
+                <div class="value">
+                  <strong>Application ID:</strong> ${application.id}<br>
+                  <strong>Submitted:</strong> ${new Date(application.created_at).toLocaleString()}<br>
+                  <strong>Reviewed:</strong> ${new Date().toLocaleString()}
+                </div>
+              </div>
+            </div>
 
-I wish you the best of luck with your fitness business and future endeavors.
-
-Best regards,
-Alex Rendler
-FitWeb Studio
-      `.trim();
+            <div class="footer">
+              <p>I wish you the best of luck with your fitness business and future endeavors.</p>
+              <p><strong>Best regards,<br>Alex Rendler<br>FitWeb Studio</strong></p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
 
       try {
-        await resend.emails.send({
-          from: 'FitWeb Studio <alex@fitwebstudio.com>',
+        console.log("Sending rejection email to:", application.email);
+        const emailResult = await resend.emails.send({
+          from: 'FitWeb Studio <onboarding@resend.dev>',
           to: [application.email],
           subject: 'FitWeb Studio Application Update',
           text: rejectionEmailContent,
           html: rejectionEmailContent.replace(/\n/g, '<br>'),
         });
+        console.log("Rejection email sent successfully to:", application.email);
+        console.log("Email result:", emailResult);
       } catch (emailError) {
         console.error('Error sending rejection email:', emailError);
+        console.error('Email error details:', {
+          to: application.email,
+          from: 'FitWeb Studio <onboarding@resend.dev>',
+          error: emailError
+        });
         // Don't fail the request if email fails
       }
     }

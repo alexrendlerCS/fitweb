@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     const { data, error } = await resend.emails.send({
-      from: "FitWeb Studio <hello@fitwebstudio.com>",
+      from: "FitWeb Studio <onboarding@resend.dev>",
       to: [to],
       subject: subject,
       text: text,

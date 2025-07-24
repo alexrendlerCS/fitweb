@@ -102,6 +102,7 @@ async function sendFeatureRequestEmail(featureRequest: any) {
               <strong>Request ID:</strong> ${featureRequest.id}<br>
               <strong>Submitted:</strong> ${new Date(featureRequest.created_at).toLocaleString()}<br>
               <strong>Status:</strong> <span class="badge" style="background-color: #f59e0b;">PENDING</span>
+              ${featureRequest.desired_price ? `<br><strong>Client's Desired Price:</strong> $${featureRequest.desired_price}` : ''}
             </div>
           </div>
         </div>
@@ -117,7 +118,7 @@ async function sendFeatureRequestEmail(featureRequest: any) {
 
   try {
     await resend.emails.send({
-      from: 'FitWeb Studio <noreply@fitwebstudio.com>',
+      from: 'FitWeb Studio <onboarding@resend.dev>',
       to: 'alexrendler@yahoo.com',
       subject: `🎯 New ${feedbackTypeLabels[featureRequest.feedback_type as keyof typeof feedbackTypeLabels]} - ${featureRequest.subscription_tier.toUpperCase()} Client`,
       html: htmlContent,
@@ -137,7 +138,8 @@ export async function POST(request: NextRequest) {
       description, 
       priority, 
       clientEmail, 
-      subscriptionTier 
+      subscriptionTier,
+      desiredPrice
     } = await request.json();
 
     // Validate required fields
@@ -208,7 +210,8 @@ export async function POST(request: NextRequest) {
         priority: priority,
         status: 'pending',
         estimated_cost: estimatedCost,
-        price_status: priceStatus
+        price_status: priceStatus,
+        desired_price: desiredPrice ? parseFloat(desiredPrice) : null
       })
       .select()
       .single();

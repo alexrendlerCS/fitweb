@@ -32,7 +32,8 @@ export default function FeatureRequestForm({
     pageUrl: "",
     feedbackType: "",
     description: "",
-    priority: ""
+    priority: "",
+    desiredPrice: ""
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,7 +70,8 @@ export default function FeatureRequestForm({
           pageUrl: "",
           feedbackType: "",
           description: "",
-          priority: ""
+          priority: "",
+          desiredPrice: ""
         });
         // Close the form dialog first, then show success dialog
         onClose();
@@ -185,11 +187,33 @@ export default function FeatureRequestForm({
                     I will review this request and provide an accurate cost before implementing and will wait for approval 
                     and agreement on the price before implementing.
                   </p>
-                  <p className="text-sm text-yellow-200 leading-relaxed mt-2">
-                    <strong>Tip:</strong> Feel free to suggest a price in your feedback below if you have a budget in mind!
-                  </p>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Desired Price Field - Only for Feature Requests */}
+          {formData.feedbackType === 'feature' && (
+            <div className="space-y-2">
+              <Label htmlFor="desiredPrice" className="text-white font-semibold">
+                Desired Price (Optional)
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">$</span>
+                <Input
+                  id="desiredPrice"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="250.00"
+                  value={formData.desiredPrice}
+                  onChange={(e) => handleInputChange('desiredPrice', e.target.value)}
+                  className="pl-8 bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-[#004d40] focus:ring-[#004d40]"
+                />
+              </div>
+              <p className="text-xs text-gray-400">
+                Enter your budget for this feature (optional)
+              </p>
             </div>
           )}
 

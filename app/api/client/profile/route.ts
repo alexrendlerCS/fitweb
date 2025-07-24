@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
         email,
         full_name,
         project_status,
+        subscription_tier,
         github_repo,
         github_branch,
         github_enabled
@@ -87,6 +88,7 @@ export async function GET(request: NextRequest) {
         email: client.email,
         fullName: client.full_name,
         projectStatus: client.project_status,
+        subscriptionTier: client.subscription_tier,
         githubRepo: client.github_repo,
         githubBranch: client.github_branch,
         githubEnabled: client.github_enabled

@@ -36,6 +36,7 @@ interface Client {
   email: string;
   fullName: string | null;
   projectStatus: string;
+  subscriptionTier: string;
 }
 
 interface FeatureRequest {
@@ -128,13 +129,48 @@ export default function ClientDashboard() {
           localStorage.setItem('client-email', clientEmail);
           console.log('Created temporary session for new user and stored email:', clientEmail);
           
-          // Mock client data for now
-          setClient({
-            id: 'temp-id',
-            email: clientEmail,
-            fullName: 'New User',
-            projectStatus: 'approved'
-          });
+          // Fetch subscription tier from approved application
+          try {
+            const statusResponse = await fetch('/api/client/check-status', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: clientEmail })
+            });
+            
+            if (statusResponse.ok) {
+              const statusData = await statusResponse.json();
+              console.log('Status check data:', statusData);
+              
+              // Mock client data with subscription tier from application
+              setClient({
+                id: 'temp-id',
+                email: clientEmail,
+                fullName: 'New User',
+                projectStatus: 'approved',
+                subscriptionTier: statusData.subscriptionTier || 'pro'
+              });
+            } else {
+              // Fallback to default
+              setClient({
+                id: 'temp-id',
+                email: clientEmail,
+                fullName: 'New User',
+                projectStatus: 'approved',
+                subscriptionTier: 'pro'
+              });
+            }
+          } catch (error) {
+            console.error('Error fetching subscription tier:', error);
+            // Fallback to default
+            setClient({
+              id: 'temp-id',
+              email: clientEmail,
+              fullName: 'New User',
+              projectStatus: 'approved',
+              subscriptionTier: 'pro'
+            });
+          }
+          
           setIsLoading(false);
           return;
         }
@@ -772,7 +808,7 @@ export default function ClientDashboard() {
               }}
               onRequestSubmitted={fetchFeatureRequests}
               clientEmail={client.email}
-              subscriptionTier="pro" // TODO: Get from client data
+              subscriptionTier={client.subscriptionTier}
             />
           )}
 

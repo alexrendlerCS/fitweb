@@ -42,6 +42,7 @@ interface FeatureRequest {
   approved_cost?: number;
   admin_notes?: string;
   price_status?: string;
+  desired_price?: number;
 }
 
 export default function AdminRequests() {
@@ -119,6 +120,17 @@ export default function AdminRequests() {
   const getUniqueProjects = () => {
     const uniqueEmails = [...new Set(requests.map(request => request.client_email))];
     return uniqueEmails.sort();
+  };
+
+  const getStatusCounts = () => {
+    const counts = {
+      pending: requests.filter(req => req.status === 'pending').length,
+      in_progress: requests.filter(req => req.status === 'in_progress').length,
+      completed: requests.filter(req => req.status === 'completed').length,
+      declined: requests.filter(req => req.status === 'declined').length,
+      total: requests.length
+    };
+    return counts;
   };
 
   const getPriorityScore = (tier: string, priority: string, status: string) => {
@@ -406,10 +418,29 @@ export default function AdminRequests() {
         {/* Filters */}
         <Card className="bg-gray-900 border-gray-700 mb-6">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters & Search
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-white flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Filters & Search
+              </CardTitle>
+              <div className="flex items-center gap-3">
+                <Badge className="bg-yellow-500 text-white">
+                  {getStatusCounts().pending} pending
+                </Badge>
+                <Badge className="bg-blue-500 text-white">
+                  {getStatusCounts().in_progress} in progress
+                </Badge>
+                <Badge className="bg-green-500 text-white">
+                  {getStatusCounts().completed} completed
+                </Badge>
+                <Badge className="bg-red-500 text-white">
+                  {getStatusCounts().declined} declined
+                </Badge>
+                <Badge className="bg-gray-500 text-white">
+                  {getStatusCounts().total} total
+                </Badge>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -548,6 +579,11 @@ export default function AdminRequests() {
                           ) : (
                             <div className="flex items-center justify-between">
                               <div>
+                                {request.desired_price && (
+                                  <p className="text-sm text-gray-300 mb-1">
+                                    <span className="text-blue-400 font-medium">Client's desired price: ${request.desired_price}</span>
+                                  </p>
+                                )}
                                 <p className="text-sm text-gray-300">
                                   <span className="text-yellow-400 font-medium">${request.estimated_cost}</span> estimated
                                 </p>
@@ -706,7 +742,12 @@ export default function AdminRequests() {
                           </DropdownMenu>
                         </td>
                         <td className="py-4 px-4">
-                          <div className="flex items-center gap-1">
+                          <div className="flex flex-col gap-1">
+                            {request.desired_price && (
+                              <span className="text-blue-400 text-sm">
+                                Desired: ${request.desired_price}
+                              </span>
+                            )}
                             {request.estimated_cost && (
                               <span className="text-yellow-400 text-sm">
                                 Est: ${request.estimated_cost}
@@ -796,6 +837,12 @@ export default function AdminRequests() {
               )}
               
               <div className="grid grid-cols-2 gap-4">
+                {selectedRequest.desired_price && (
+                  <div>
+                    <h3 className="font-semibold text-white mb-2">Client's Desired Price</h3>
+                    <p className="text-blue-400">${selectedRequest.desired_price}</p>
+                  </div>
+                )}
                 {selectedRequest.estimated_cost && (
                   <div>
                     <h3 className="font-semibold text-white mb-2">Estimated Cost</h3>
