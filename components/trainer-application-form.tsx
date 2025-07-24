@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle, Plus, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const applicationSchema = z.object({
@@ -30,7 +30,8 @@ const applicationSchema = z.object({
     .string()
     .min(10, "Please describe your goals (at least 10 characters)"),
   instagram_url: z.string().url().optional().or(z.literal("")),
-  calendly_url: z.string().url().optional().or(z.literal("")),
+  referral_name: z.string().optional().or(z.literal("")),
+  // Remove preferred_times from schema since we handle it separately
 });
 
 type ApplicationFormData = z.infer<typeof applicationSchema>;
@@ -45,6 +46,34 @@ export default function TrainerApplicationForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [preferredTimes, setPreferredTimes] = useState<Array<{day: string, time: string}>>([]);
+
+  const days = [
+    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+  ];
+
+  const times = [
+    "Morning (9 AM - 12 PM)",
+    "Afternoon (12 PM - 3 PM)", 
+    "Late Afternoon (3 PM - 6 PM)",
+    "Evening (6 PM - 9 PM)"
+  ];
+
+  const addPreferredTime = () => {
+    if (preferredTimes.length < 5) {
+      setPreferredTimes([...preferredTimes, { day: "", time: "" }]);
+    }
+  };
+
+  const removePreferredTime = (index: number) => {
+    setPreferredTimes(preferredTimes.filter((_, i) => i !== index));
+  };
+
+  const updatePreferredTime = (index: number, field: 'day' | 'time', value: string) => {
+    const updated = [...preferredTimes];
+    updated[index] = { ...updated[index], [field]: value };
+    setPreferredTimes(updated);
+  };
 
   const {
     register,
@@ -63,28 +92,56 @@ export default function TrainerApplicationForm({
   const selectedTier = watch("selected_tier");
 
   const onSubmit = async (data: ApplicationFormData) => {
+    console.log("Form submission started");
+    console.log("Form data:", data);
+    console.log("Preferred times:", preferredTimes);
+    
+    // Validate that at least one preferred time is selected
+    if (preferredTimes.length === 0) {
+      setError("Please select at least one preferred call time.");
+      return;
+    }
+
+    // Validate that all selected time slots are complete
+    const incompleteSlots = preferredTimes.filter(slot => !slot.day || !slot.time);
+    if (incompleteSlots.length > 0) {
+      setError("Please complete all selected time slots.");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
     try {
+      const requestBody = {
+        ...data,
+        preferred_times: preferredTimes
+      };
+      
+      console.log("Sending request with body:", requestBody);
+      
       const response = await fetch("/api/applications", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log("Response status:", response.status);
       const result = await response.json();
+      console.log("Response result:", result);
 
       if (!response.ok) {
         throw new Error(result.error || "Failed to submit application");
       }
 
+      console.log("Application submitted successfully!");
       setIsSuccess(true);
     } catch (err) {
       console.error("Error submitting application:", err);
-      setError("Failed to submit application. Please try again.");
+      console.error("Error details:", err);
+      setError(`Failed to submit application: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -262,18 +319,97 @@ export default function TrainerApplicationForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="calendly_url" className="text-white">
-              Calendly URL (Optional)
+            <Label htmlFor="referral_name" className="text-white">
+              Referral Name (Optional)
             </Label>
             <Input
-              id="calendly_url"
-              {...register("calendly_url")}
+              id="referral_name"
+              {...register("referral_name")}
               className="bg-black border-gray-600 text-white placeholder-gray-400 focus:border-[#004d40]"
-              placeholder="https://calendly.com/yourbusiness"
+              placeholder="Who referred you to us?"
             />
-            {errors.calendly_url && (
+            {errors.referral_name && (
               <p className="text-red-400 text-sm">
-                {errors.calendly_url.message}
+                {errors.referral_name.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label className="text-white">
+                Preferred Call Times (Select up to 5)
+              </Label>
+              <Button
+                type="button"
+                onClick={addPreferredTime}
+                disabled={preferredTimes.length >= 5}
+                className="bg-[#004d40] hover:bg-[#00695c] text-white px-3 py-1 text-sm"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Time
+              </Button>
+            </div>
+            
+            {preferredTimes.length === 0 && (
+              <p className="text-gray-400 text-sm">
+                Please add at least one preferred time for us to call you.
+              </p>
+            )}
+
+            {preferredTimes.map((timeSlot, index) => (
+              <div key={index} className="flex gap-3 items-end bg-gray-800 p-4 rounded-lg">
+                <div className="flex-1">
+                  <Label className="text-gray-300 text-sm mb-2 block">Day</Label>
+                  <Select
+                    value={timeSlot.day}
+                    onValueChange={(value) => updatePreferredTime(index, 'day', value)}
+                  >
+                    <SelectTrigger className="bg-black border-gray-600 text-white">
+                      <SelectValue placeholder="Select day" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-600">
+                      {days.map((day) => (
+                        <SelectItem key={day} value={day} className="text-white hover:bg-gray-700">
+                          {day}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex-1">
+                  <Label className="text-gray-300 text-sm mb-2 block">Time</Label>
+                  <Select
+                    value={timeSlot.time}
+                    onValueChange={(value) => updatePreferredTime(index, 'time', value)}
+                  >
+                    <SelectTrigger className="bg-black border-gray-600 text-white">
+                      <SelectValue placeholder="Select time" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-600">
+                      {times.map((time) => (
+                        <SelectItem key={time} value={time} className="text-white hover:bg-gray-700">
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Button
+                  type="button"
+                  onClick={() => removePreferredTime(index)}
+                  className="bg-red-600 hover:bg-red-700 text-white p-2"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+
+            {preferredTimes.length > 0 && preferredTimes.some(t => !t.day || !t.time) && (
+              <p className="text-red-400 text-sm">
+                Please complete all selected time slots.
               </p>
             )}
           </div>
@@ -281,6 +417,7 @@ export default function TrainerApplicationForm({
           <Button
             type="submit"
             disabled={isSubmitting}
+            onClick={() => console.log("Submit button clicked, isSubmitting:", isSubmitting)}
             className="w-full bg-[#004d40] hover:bg-[#00695c] text-white py-3 rounded-xl text-lg"
           >
             {isSubmitting ? (

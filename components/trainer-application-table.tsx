@@ -275,20 +275,29 @@ export default function TrainerApplicationTable({
                                 </div>
                               )}
 
-                              {selectedApplication.calendly_url && (
+                              {selectedApplication.referral_name && (
                                 <div>
                                   <label className="text-gray-400 text-sm">
-                                    Calendly
+                                    Referral
                                   </label>
-                                  <a
-                                    href={selectedApplication.calendly_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-[#004d40] hover:underline flex items-center gap-1"
-                                  >
-                                    View Calendar{" "}
-                                    <ExternalLink className="h-3 w-3" />
-                                  </a>
+                                  <p className="text-white">
+                                    {selectedApplication.referral_name}
+                                  </p>
+                                </div>
+                              )}
+
+                              {selectedApplication.preferred_times && selectedApplication.preferred_times.length > 0 && (
+                                <div>
+                                  <label className="text-gray-400 text-sm">
+                                    Preferred Call Times
+                                  </label>
+                                  <div className="mt-1 space-y-1">
+                                    {selectedApplication.preferred_times.map((time, index) => (
+                                      <div key={index} className="text-white text-sm">
+                                        {index + 1}. {time.day} - {time.time}
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
                               )}
 

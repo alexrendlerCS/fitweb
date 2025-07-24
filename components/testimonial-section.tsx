@@ -22,7 +22,7 @@ export default function TestimonialSection() {
       role: "Fitness Trainer",
       image: "/placeholder.svg?height=80&width=80",
       quote:
-        "FitWeb Studio transformed my business! The reliability, attentiveness, and quick response time made the entire process seamless. My clients love the new booking system!",
+        "FitWeb Studio has made managing my business so much easier! Booking clients and selling session packages is now completely seamless. Their team is responsive, reliable, and truly attentive to every detail. My clients love how easy the new system is to use—it's been a total game changer!",
       rating: 5,
     },
     {

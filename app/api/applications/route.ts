@@ -4,7 +4,9 @@ import { Resend } from "resend";
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("API route called");
     const body = await request.json();
+    console.log("Request body:", body);
     const {
       full_name,
       email,
@@ -12,8 +14,21 @@ export async function POST(request: NextRequest) {
       selected_tier,
       goals,
       instagram_url,
-      calendly_url,
+      referral_name,
+      preferred_times,
     } = body;
+
+    console.log("Inserting into database with data:", {
+      full_name,
+      email,
+      business_name,
+      selected_tier,
+      goals,
+      instagram_url: instagram_url || null,
+      referral_name: referral_name || null,
+      preferred_times: preferred_times || null,
+      status: "pending",
+    });
 
     // Insert application into database
     const { data, error } = await supabase
@@ -26,7 +41,8 @@ export async function POST(request: NextRequest) {
           selected_tier,
           goals,
           instagram_url: instagram_url || null,
-          calendly_url: calendly_url || null,
+          referral_name: referral_name || null,
+          preferred_times: preferred_times || null,
           status: "pending",
         },
       ])
@@ -35,10 +51,12 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("Database error:", error);
       return NextResponse.json(
-        { error: "Failed to save application" },
+        { error: `Failed to save application: ${error.message}` },
         { status: 500 }
       );
     }
+
+    console.log("Database insert successful:", data);
 
     // Send email notification to admin
     const emailContent = `
@@ -54,7 +72,12 @@ ${goals}
 
 Social Links:
 ${instagram_url ? `Instagram: ${instagram_url}` : "Instagram: Not provided"}
-${calendly_url ? `Calendly: ${calendly_url}` : "Calendly: Not provided"}
+${referral_name ? `Referral: ${referral_name}` : "Referral: Not provided"}
+
+Preferred Call Times:
+${preferred_times && preferred_times.length > 0 
+  ? preferred_times.map((time, index) => `${index + 1}. ${time.day} - ${time.time}`).join('\n')
+  : "No preferred times selected"}
 
 Application ID: ${data[0].id}
 
