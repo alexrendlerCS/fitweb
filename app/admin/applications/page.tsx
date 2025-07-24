@@ -14,6 +14,7 @@ export default function AdminApplicationsPage() {
 
   const fetchApplications = async () => {
     try {
+      console.log("Fetching applications...");
       const { data, error } = await supabase
         .from("trainer_applications")
         .select("*")
@@ -21,6 +22,7 @@ export default function AdminApplicationsPage() {
 
       if (error) throw error;
 
+      console.log("Fetched applications:", data);
       setApplications(data || []);
     } catch (err) {
       console.error("Error fetching applications:", err);
@@ -122,11 +124,11 @@ export default function AdminApplicationsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-400 text-sm">Approved</p>
-                  <p className="text-2xl font-bold text-blue-400">
+                  <p className="text-2xl font-bold text-green-400">
                     {stats.approved}
                   </p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-blue-400" />
+                <CheckCircle className="h-8 w-8 text-green-400" />
               </div>
             </CardContent>
           </Card>

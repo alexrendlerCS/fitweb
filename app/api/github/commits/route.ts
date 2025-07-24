@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
 
     let repo = 'vercel/next.js'; // Default fallback
     let branch = 'main';
+    let useDefaultRepo = true;
 
     // If client_id is provided, fetch their GitHub settings
     if (clientId && clientId !== 'mock-id' && clientId !== 'temp-session') {
@@ -24,7 +25,18 @@ export async function GET(request: NextRequest) {
       } else if (client && client.github_enabled && client.github_repo) {
         repo = client.github_repo;
         branch = client.github_branch || 'main';
+        useDefaultRepo = false;
         console.log(`Using client GitHub repo: ${repo} (branch: ${branch})`);
+      } else {
+        console.log('No client-specific GitHub settings found, returning empty commits');
+        // Return empty commits instead of using default repo
+        return NextResponse.json({
+          success: true,
+          commits: [],
+          repo: null,
+          branch: null,
+          useDefaultRepo: false
+        });
       }
     }
 
@@ -73,7 +85,8 @@ export async function GET(request: NextRequest) {
       success: true,
       commits: formattedCommits,
       repo,
-      branch
+      branch,
+      useDefaultRepo
     });
 
   } catch (error) {

@@ -17,6 +17,7 @@ export interface TrainerApplication {
   preferred_times?: Array<{day: string, time: string}>;
   status: string;
   stripe_link?: string;
+  zoom_link?: string;
   created_at: string;
   updated_at: string;
 }

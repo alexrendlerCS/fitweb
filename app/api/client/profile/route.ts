@@ -39,8 +39,16 @@ export async function GET(request: NextRequest) {
       }
       
       // For regular sessions, we'd decode the JWT token
-      // For now, let's assume the token contains the email
-      clientEmail = 'alexrendler@yahoo.com'; // Default for testing
+      // For now, let's get the email from the request headers or query params
+      const url = new URL(request.url);
+      const emailParam = url.searchParams.get('email');
+      
+      if (emailParam) {
+        clientEmail = emailParam;
+      } else {
+        // Fallback to default for testing - this should be removed in production
+        clientEmail = 'alexrendler@yahoo.com';
+      }
     } catch (error) {
       console.error('Error decoding session token:', error);
       return NextResponse.json(

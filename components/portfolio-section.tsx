@@ -44,19 +44,19 @@ export default function PortfolioSection() {
                   <span className="bg-[#004d40] text-white px-2 py-0.5 rounded-full text-xs">Custom Packages</span>
                   <span className="bg-[#004d40] text-white px-2 py-0.5 rounded-full text-xs">Custom Analytics</span>
                 </div>
-              </div>
+                </div>
 
-              <Button
-                asChild
+                <Button
+                  asChild
                 className="w-full mt-6 py-4 text-lg font-bold rounded-lg bg-gradient-to-r from-[#004d40] to-[#00695c] shadow-lg hover:from-[#00695c] hover:to-[#004d40] text-white transition-all duration-300 border-2 border-[#004d40] hover:scale-105"
-              >
-                <a
+                >
+                  <a
                   href="/demo/client-dashboard"
                   className="block text-center tracking-wide"
-                >
+                  >
                   See All of the Features in Action
-                </a>
-              </Button>
+                  </a>
+                </Button>
             </CardContent>
           </Card>
         </div>

@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   Loader2,
@@ -27,8 +28,10 @@ import {
   XCircle,
   ExternalLink,
   Mail,
+  X,
 } from "lucide-react";
 import { supabase, TrainerApplication } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 interface TrainerApplicationTableProps {
   applications: TrainerApplication[];
@@ -39,6 +42,7 @@ export default function TrainerApplicationTable({
   applications,
   onUpdate,
 }: TrainerApplicationTableProps) {
+  const { toast } = useToast();
   const [filteredApplications, setFilteredApplications] =
     useState<TrainerApplication[]>(applications);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -47,6 +51,8 @@ export default function TrainerApplicationTable({
     useState<TrainerApplication | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [stripeLink, setStripeLink] = useState("");
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     let filtered = applications;
@@ -70,27 +76,56 @@ export default function TrainerApplicationTable({
   const updateApplicationStatus = async (
     id: string,
     status: string,
-    stripeLink?: string
+    zoomLink?: string
   ) => {
+    console.log('updateApplicationStatus called with:', { id, status, zoomLink });
     setIsUpdating(true);
     try {
-      const updateData: any = { status };
-      if (stripeLink) {
-        updateData.stripe_link = stripeLink;
+      const requestBody = {
+        id,
+        status,
+        zoomLink
+      };
+      
+      console.log('Sending request to API:', requestBody);
+      
+      const response = await fetch('/api/admin/update-application', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log('Response status:', response.status);
+      const result = await response.json();
+      console.log('Response result:', result);
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update application');
       }
 
-      const { error } = await supabase
-        .from("trainer_applications")
-        .update(updateData)
-        .eq("id", id);
-
-      if (error) throw error;
-
-      onUpdate();
+      console.log('Application updated successfully, refreshing data...');
+      
+      // Close the dialog first
+      console.log('Closing dialog...');
       setSelectedApplication(null);
       setStripeLink("");
+      console.log('Dialog should be closed now');
+      
+      // Then refresh the data
+      console.log('Refreshing data...');
+      await onUpdate();
+      console.log('Data refresh completed');
+      
+      // Show success message after a small delay to ensure data is refreshed
+      setTimeout(() => {
+        setSuccessMessage(`Application ${status} successfully! Email sent to ${result.application?.email || 'applicant'}.`);
+        setShowSuccessDialog(true);
+      }, 500);
     } catch (error) {
       console.error("Error updating application:", error);
+      alert(`Error updating application: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsUpdating(false);
     }
@@ -99,7 +134,7 @@ export default function TrainerApplicationTable({
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       pending: { color: "bg-yellow-500", text: "Pending" },
-      approved: { color: "bg-blue-500", text: "Approved" },
+      approved: { color: "bg-green-500", text: "Approved" },
       paid: { color: "bg-green-500", text: "Paid" },
       rejected: { color: "bg-red-500", text: "Rejected" },
     };
@@ -128,7 +163,8 @@ export default function TrainerApplicationTable({
   };
 
   return (
-    <Card className="bg-gray-900 border-gray-700">
+    <>
+      <Card className="bg-gray-900 border-gray-700">
       <CardHeader>
         <CardTitle className="text-2xl text-white">
           Trainer Applications
@@ -199,13 +235,17 @@ export default function TrainerApplicationTable({
                   </td>
                   <td className="p-3">
                     <div className="flex gap-2">
-                      <Dialog>
+                      <Dialog open={selectedApplication?.id === app.id} onOpenChange={(open) => {
+                        if (!open) {
+                          setSelectedApplication(null);
+                          setStripeLink("");
+                        }
+                      }}>
                         <DialogTrigger asChild>
                           <Button
-                            variant="outline"
                             size="sm"
                             onClick={() => setSelectedApplication(app)}
-                            className="border-gray-600 text-white hover:bg-gray-800"
+                            className="bg-[#004d40] hover:bg-[#00695c] text-white"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -215,6 +255,19 @@ export default function TrainerApplicationTable({
                             <DialogTitle className="text-white">
                               Application Details
                             </DialogTitle>
+                            <DialogClose asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-4 top-4 text-gray-400 hover:text-white"
+                                onClick={() => {
+                                  setSelectedApplication(null);
+                                  setStripeLink("");
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </DialogClose>
                           </DialogHeader>
                           {selectedApplication && (
                             <div className="space-y-4 text-white">
@@ -241,11 +294,11 @@ export default function TrainerApplicationTable({
                                   <label className="text-gray-400 text-sm">
                                     Selected Tier
                                   </label>
-                                  <p>
+                                  <div>
                                     {getTierBadge(
                                       selectedApplication.selected_tier
                                     )}
-                                  </p>
+                                  </div>
                                 </div>
                               </div>
 
@@ -283,6 +336,22 @@ export default function TrainerApplicationTable({
                                   <p className="text-white">
                                     {selectedApplication.referral_name}
                                   </p>
+                                </div>
+                              )}
+
+                              {selectedApplication.zoom_link && (
+                                <div>
+                                  <label className="text-gray-400 text-sm">
+                                    Zoom Link
+                                  </label>
+                                  <a
+                                    href={selectedApplication.zoom_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[#004d40] hover:underline flex items-center gap-1"
+                                  >
+                                    View Meeting Link <ExternalLink className="h-3 w-3" />
+                                  </a>
                                 </div>
                               )}
 
@@ -341,25 +410,27 @@ export default function TrainerApplicationTable({
 
                               <div className="flex gap-2 pt-4">
                                 <Button
-                                  onClick={() =>
+                                  onClick={() => {
+                                    console.log('Approve & Send Zoom clicked with zoom link:', stripeLink);
                                     updateApplicationStatus(
                                       selectedApplication.id,
-                                      "approved"
-                                    )
-                                  }
+                                      "approved",
+                                      stripeLink
+                                    );
+                                  }}
                                   disabled={isUpdating}
-                                  className="bg-green-600 hover:bg-green-700"
+                                  className="bg-[#004d40] hover:bg-[#00695c]"
                                 >
                                   <CheckCircle className="h-4 w-4 mr-2" />
                                   Approve & Send Zoom
                                 </Button>
                                 <Button
-                                  onClick={() =>
+                                  onClick={() => {
                                     updateApplicationStatus(
                                       selectedApplication.id,
                                       "rejected"
-                                    )
-                                  }
+                                    );
+                                  }}
                                   disabled={isUpdating}
                                   variant="destructive"
                                 >
@@ -374,7 +445,7 @@ export default function TrainerApplicationTable({
                                     )
                                   }
                                   disabled={isUpdating}
-                                  className="bg-blue-600 hover:bg-blue-700"
+                                  className="bg-[#004d40] hover:bg-[#00695c]"
                                 >
                                   <Mail className="h-4 w-4 mr-2" />
                                   Mark Paid
@@ -399,5 +470,29 @@ export default function TrainerApplicationTable({
         )}
       </CardContent>
     </Card>
+
+    {/* Success Dialog */}
+    <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+      <DialogContent className="bg-gray-900 border-gray-700">
+        <DialogHeader>
+          <DialogTitle className="text-white flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-green-400" />
+            Success!
+          </DialogTitle>
+        </DialogHeader>
+        <div className="text-white">
+          <p>{successMessage}</p>
+        </div>
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setShowSuccessDialog(false)}
+            className="bg-[#004d40] hover:bg-[#00695c]"
+          >
+            Close
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

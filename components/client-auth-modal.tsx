@@ -47,6 +47,8 @@ export default function ClientAuthModal({ isOpen, onClose, email, mode }: Client
           return;
         }
 
+        // Store email in localStorage for dashboard authentication
+        localStorage.setItem('client-email', email);
         // After successful signup, redirect to dashboard
         router.push(`/client/dashboard?email=${encodeURIComponent(email)}`);
       } else {
@@ -93,6 +95,8 @@ export default function ClientAuthModal({ isOpen, onClose, email, mode }: Client
       }
 
       console.log('Login successful, redirecting to dashboard...');
+      // Store email in localStorage for dashboard authentication
+      localStorage.setItem('client-email', email);
       // Redirect to dashboard
       router.push('/client/dashboard');
     } catch (err) {

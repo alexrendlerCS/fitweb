@@ -112,17 +112,21 @@ export default function ClientDashboard() {
       const hasSession = document.cookie.includes('client-session');
       console.log('Has session cookie:', hasSession);
       
+      // Get email from URL params (for new users) or try to extract from session
+      const urlParams = new URLSearchParams(window.location.search);
+      let clientEmail = urlParams.get('email');
+      
       if (!hasSession) {
-        // Check if we can get client info from URL params or localStorage
-        const urlParams = new URLSearchParams(window.location.search);
-        const clientEmail = urlParams.get('email');
         console.log('Email from URL params:', clientEmail);
         
         if (clientEmail) {
           // User just signed up, create a temporary session
           const sessionToken = Buffer.from(`temp:${Date.now()}`).toString('base64');
           document.cookie = `client-session=${sessionToken}; path=/; max-age=${60 * 60 * 24 * 7}`;
-          console.log('Created temporary session for new user');
+          
+          // Store email in localStorage for future sessions
+          localStorage.setItem('client-email', clientEmail);
+          console.log('Created temporary session for new user and stored email:', clientEmail);
           
           // Mock client data for now
           setClient({
@@ -140,11 +144,29 @@ export default function ClientDashboard() {
         return;
       }
 
-      console.log('Session found, fetching real client data');
+      // For existing sessions, we need to get the email from the session
+      if (!clientEmail) {
+        // Try to get email from localStorage (temporary solution)
+        const storedEmail = localStorage.getItem('client-email');
+        console.log('Stored email from localStorage:', storedEmail);
+        if (storedEmail) {
+          clientEmail = storedEmail;
+          console.log('Using stored email from localStorage:', clientEmail);
+        } else {
+          // If no stored email, redirect to status page to re-authenticate
+          console.log('No stored email found, redirecting to status page');
+          router.push('/status');
+          return;
+        }
+      }
+
+      console.log('Session found, fetching real client data for email:', clientEmail);
       // Fetch real client data from the session
-      const response = await fetch('/api/client/profile');
+      const response = await fetch(`/api/client/profile?email=${encodeURIComponent(clientEmail)}`);
+      console.log('Client profile response status:', response.status);
       if (response.ok) {
         const data = await response.json();
+        console.log('Client profile data:', data);
         setClient(data.client);
       } else {
         console.error('Failed to fetch client data');
@@ -161,6 +183,8 @@ export default function ClientDashboard() {
   const handleLogout = () => {
     // Clear session cookie
     document.cookie = 'client-session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    // Clear stored email
+    localStorage.removeItem('client-email');
     router.push('/status');
   };
 

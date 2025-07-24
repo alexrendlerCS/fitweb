@@ -64,6 +64,10 @@ export default function RecentUpdates({
         
         if (data.success) {
           setCommits(data.commits);
+          // If using default repo, show a message
+          if (data.useDefaultRepo) {
+            console.log('Using default repository - no client-specific GitHub settings found');
+          }
         } else {
           setError(data.error || 'Failed to fetch commits');
         }
@@ -131,10 +135,10 @@ export default function RecentUpdates({
         <CardContent>
           {commits.length === 0 ? (
             <div className="text-gray-400 text-center py-4">
-              No recent updates found
+              {clientId ? 'No GitHub repository configured' : 'No recent updates found'}
             </div>
           ) : (
-            <div className="space-y-4">
+                        <div className="space-y-4">
               {commits.map((commit) => (
                 <div
                   key={commit.id}
