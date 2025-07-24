@@ -52,6 +52,7 @@ export default function AdminRequests() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [projectFilter, setProjectFilter] = useState("all");
   const [selectedRequest, setSelectedRequest] = useState<FeatureRequest | null>(null);
   const [isDescriptionDialogOpen, setIsDescriptionDialogOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
@@ -68,7 +69,7 @@ export default function AdminRequests() {
 
   useEffect(() => {
     filterRequests();
-  }, [requests, searchTerm, statusFilter, priorityFilter]);
+  }, [requests, searchTerm, statusFilter, priorityFilter, projectFilter]);
 
   const fetchRequests = async () => {
     setIsLoading(true);
@@ -107,7 +108,17 @@ export default function AdminRequests() {
       filtered = filtered.filter(request => request.priority === priorityFilter);
     }
 
+    // Project filter (by client email)
+    if (projectFilter !== "all") {
+      filtered = filtered.filter(request => request.client_email === projectFilter);
+    }
+
     setFilteredRequests(filtered);
+  };
+
+  const getUniqueProjects = () => {
+    const uniqueEmails = [...new Set(requests.map(request => request.client_email))];
+    return uniqueEmails.sort();
   };
 
   const getPriorityScore = (tier: string, priority: string, status: string) => {
@@ -173,6 +184,29 @@ export default function AdminRequests() {
       case 'starter': return 'bg-gray-500';
       default: return 'bg-gray-500';
     }
+  };
+
+  const getEmailColor = (email: string) => {
+    // Generate a consistent color based on email hash
+    const hash = email.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    
+    const colorSchemes = [
+      { bg: 'bg-blue-900/20', border: 'border-2 border-blue-400/50' },
+      { bg: 'bg-green-900/20', border: 'border-2 border-green-400/50' },
+      { bg: 'bg-purple-900/20', border: 'border-2 border-purple-400/50' },
+      { bg: 'bg-yellow-900/20', border: 'border-2 border-yellow-400/50' },
+      { bg: 'bg-pink-900/20', border: 'border-2 border-pink-400/50' },
+      { bg: 'bg-indigo-900/20', border: 'border-2 border-indigo-400/50' },
+      { bg: 'bg-orange-900/20', border: 'border-2 border-orange-400/50' },
+      { bg: 'bg-teal-900/20', border: 'border-2 border-teal-400/50' },
+      { bg: 'bg-red-900/20', border: 'border-2 border-red-400/50' },
+      { bg: 'bg-cyan-900/20', border: 'border-2 border-cyan-400/50' }
+    ];
+    
+    return colorSchemes[Math.abs(hash) % colorSchemes.length];
   };
 
   const formatDate = (dateString: string) => {
@@ -378,7 +412,7 @@ export default function AdminRequests() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
@@ -411,12 +445,26 @@ export default function AdminRequests() {
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
               </select>
+
+              <select
+                value={projectFilter}
+                onChange={(e) => setProjectFilter(e.target.value)}
+                className="bg-gray-800 border border-gray-600 text-white rounded-md px-3 py-2"
+              >
+                <option value="all">All Projects</option>
+                {getUniqueProjects().map((email) => (
+                  <option key={email} value={email}>
+                    {email}
+                  </option>
+                ))}
+              </select>
               
               <Button
                 onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("all");
                   setPriorityFilter("all");
+                  setProjectFilter("all");
                 }}
                 className="bg-[#004d40] hover:bg-[#00695c] text-white"
               >
@@ -440,7 +488,7 @@ export default function AdminRequests() {
                 {sortedRequests
                   .filter(req => req.price_status === 'pending_estimate')
                   .map((request) => (
-                    <div key={request.id} className="bg-gray-800 rounded-lg p-4 border border-yellow-600/30 shadow-lg shadow-yellow-600/10">
+                    <div key={request.id} className={`rounded-lg p-4 border shadow-lg ${getEmailColor(request.client_email).bg} ${getEmailColor(request.client_email).border}`}>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
@@ -450,7 +498,9 @@ export default function AdminRequests() {
                             <Badge className={`${getTierColor(request.subscription_tier)} text-white`}>
                               {request.subscription_tier}
                             </Badge>
-                            <span className="text-sm text-gray-400">{request.client_email}</span>
+                            <span className="text-sm font-medium text-gray-400">
+                              {request.client_email}
+                            </span>
                           </div>
                           <h3 className="font-medium text-white mb-1">{request.title}</h3>
                           <p className="text-sm text-gray-400 mb-3">
@@ -555,14 +605,14 @@ export default function AdminRequests() {
                          request.status === 'pending' || request.status === 'in_progress' || request.price_status === 'pending_estimate'
                            ? 'bg-gray-800/30 border-l-4 border-l-[#004d40] shadow-sm' 
                            : 'opacity-60'
-                       }`}>
+                       } ${getEmailColor(request.client_email).bg} ${getEmailColor(request.client_email).border}`}>
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2">
                             <Badge className={`${getPriorityColor(request.priority)} text-white`}>
                               {request.priority}
                             </Badge>
                             <span className="text-xs text-gray-400">
-                              ({getPriorityScore(request.subscription_tier, request.priority)})
+                              ({getPriorityScore(request.subscription_tier, request.priority, request.status)})
                             </span>
                           </div>
                         </td>
@@ -591,7 +641,9 @@ export default function AdminRequests() {
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <p className="text-sm text-white">{request.client_email}</p>
+                          <p className="text-sm font-medium text-white">
+                            {request.client_email}
+                          </p>
                         </td>
                         <td className="py-4 px-4">
                           <Badge className={`${getTierColor(request.subscription_tier)} text-white`}>
@@ -711,8 +763,10 @@ export default function AdminRequests() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h3 className="font-semibold text-white mb-2">Client</h3>
-                  <p className="text-gray-300">{selectedRequest.client_email}</p>
+                  <h3 className="font-semibold text-white mb-2">Client Email</h3>
+                  <p className={`font-medium ${getEmailColor(selectedRequest.client_email).bg} ${getEmailColor(selectedRequest.client_email).border}`}>
+                    {selectedRequest.client_email}
+                  </p>
                 </div>
                 <div>
                   <h3 className="font-semibold text-white mb-2">Subscription Tier</h3>
