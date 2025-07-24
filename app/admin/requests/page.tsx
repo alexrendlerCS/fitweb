@@ -26,6 +26,7 @@ import {
   ChevronDown
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { getPriorityScore, sortFeatureRequests } from "@/lib/priority-utils";
 
 interface FeatureRequest {
   id: string;
@@ -133,22 +134,7 @@ export default function AdminRequests() {
     return counts;
   };
 
-  const getPriorityScore = (tier: string, priority: string, status: string) => {
-    // If status is completed or declined, return 0 to push to bottom
-    if (status === 'completed' || status === 'declined') {
-      return 0;
-    }
-    
-    const tierScores = { elite: 100, pro: 50, starter: 10 };
-    const priorityScores = { high: 30, medium: 20, low: 10 };
-    return (tierScores[tier as keyof typeof tierScores] || 0) + (priorityScores[priority as keyof typeof priorityScores] || 0);
-  };
-
-  const sortedRequests = [...filteredRequests].sort((a, b) => {
-    const scoreA = getPriorityScore(a.subscription_tier, a.priority, a.status);
-    const scoreB = getPriorityScore(b.subscription_tier, b.priority, b.status);
-    return scoreB - scoreA; // Highest priority first
-  });
+  const sortedRequests = sortFeatureRequests(filteredRequests);
 
   const getFeedbackTypeIcon = (type: string) => {
     switch (type) {
@@ -648,7 +634,7 @@ export default function AdminRequests() {
                               {request.priority}
                             </Badge>
                             <span className="text-xs text-gray-400">
-                              ({getPriorityScore(request.subscription_tier, request.priority, request.status)})
+                              ({getPriorityScore(request.subscription_tier, request.priority, request.feedback_type)})
                             </span>
                           </div>
                         </td>

@@ -3,15 +3,10 @@ import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get all feature requests with current client subscription tiers
+    // Get all feature requests ordered by priority score and creation date
     const { data: requests, error } = await supabase
       .from('feature_requests')
-      .select(`
-        *,
-        clients(
-          subscription_tier
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -22,14 +17,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Transform the data to use current subscription tier from clients table
-    const transformedRequests = requests.map(request => ({
-      ...request,
-      subscription_tier: request.clients?.subscription_tier || request.subscription_tier // Use current tier, fallback to stored tier
-    }));
-
     // Calculate priority scores and sort
-    const requestsWithScores = transformedRequests.map(request => {
+    const requestsWithScores = requests.map(request => {
       // If status is completed or declined, return 0 to push to bottom
       if (request.status === 'completed' || request.status === 'declined') {
         return {
@@ -61,18 +50,18 @@ export async function GET(request: NextRequest) {
 
     // Get counts for different categories
     const counts = {
-      total: transformedRequests.length,
-      pending: transformedRequests.filter(req => req.status === 'pending').length,
-      in_progress: transformedRequests.filter(req => req.status === 'in_progress').length,
-      completed: transformedRequests.filter(req => req.status === 'completed').length,
-      declined: transformedRequests.filter(req => req.status === 'declined').length,
-      high_priority: transformedRequests.filter(req => req.priority === 'high').length,
-      medium_priority: transformedRequests.filter(req => req.priority === 'medium').length,
-      low_priority: transformedRequests.filter(req => req.priority === 'low').length,
-      elite: transformedRequests.filter(req => req.subscription_tier === 'elite').length,
-      pro: transformedRequests.filter(req => req.subscription_tier === 'pro').length,
-      starter: transformedRequests.filter(req => req.subscription_tier === 'starter').length,
-      with_cost: transformedRequests.filter(req => req.estimated_cost || req.approved_cost).length
+      total: requests.length,
+      pending: requests.filter(req => req.status === 'pending').length,
+      in_progress: requests.filter(req => req.status === 'in_progress').length,
+      completed: requests.filter(req => req.status === 'completed').length,
+      declined: requests.filter(req => req.status === 'declined').length,
+      high_priority: requests.filter(req => req.priority === 'high').length,
+      medium_priority: requests.filter(req => req.priority === 'medium').length,
+      low_priority: requests.filter(req => req.priority === 'low').length,
+      elite: requests.filter(req => req.subscription_tier === 'elite').length,
+      pro: requests.filter(req => req.subscription_tier === 'pro').length,
+      starter: requests.filter(req => req.subscription_tier === 'starter').length,
+      with_cost: requests.filter(req => req.estimated_cost || req.approved_cost).length
     };
 
     return NextResponse.json({
