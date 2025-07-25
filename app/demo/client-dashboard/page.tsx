@@ -54,7 +54,21 @@ export default function DemoClientDashboardPage() {
             </Link>
           </div>
           <h1 className="text-4xl font-bold mb-2 text-center">Coach Kilday's Platform</h1>
-          <p className="text-lg text-gray-300 mb-10 text-center">Explore the features and user experience of a real client platform.</p>
+          <p className="text-lg text-gray-300 mb-6 text-center">Explore the features and user experience of a real client platform.</p>
+          
+          <div className="text-center mb-10">
+            <a 
+              href="https://coachkilday.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-6 py-3 bg-[#004d40] hover:bg-[#00695c] text-white font-semibold rounded-lg transition-colors duration-300 shadow-lg hover:shadow-xl"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              Visit Live Platform
+            </a>
+          </div>
           <div className="grid gap-10 md:grid-cols-2">
             {demoSections.map((section, idx) => (
               <div

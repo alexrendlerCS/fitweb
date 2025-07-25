@@ -32,6 +32,10 @@ export default function ElitePackage() {
         description: "Everything included in the Pro package",
       },
       {
+        title: "Personalized Landing Page (Build Your Own Brand)",
+        description: "Custom landing page with your branding, colors, logo, and messaging to showcase your unique fitness business and establish your professional presence",
+      },
+      {
         title: "Editable Homepage (Customize Photos, About, Branding)",
         description: "Full control over homepage content and branding",
       },
@@ -93,6 +97,7 @@ export default function ElitePackage() {
   const keyFeatures = [
     "Setup Cost: $1,750+ + Monthly: $200+",
     "Unlimited clients and advanced customization",
+    "Personalized landing page (build your own brand)",
     "Editable homepage and top priority support",
     "Custom analytics dashboard (by request)",
     "Multi-trainer and multi-location support",

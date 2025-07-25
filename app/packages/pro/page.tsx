@@ -34,6 +34,10 @@ export default function ProPackage() {
         description: "Everything included in the Starter package",
       },
       {
+        title: "Personalized Landing Page (Build Your Own Brand)",
+        description: "Custom landing page with your branding, colors, logo, and messaging to showcase your unique fitness business",
+      },
+      {
         title: "Bulk Email Integration (Newsletters, Announcements)",
         description:
           "Send newsletters and announcements to all clients at once",
@@ -87,6 +91,7 @@ export default function ProPackage() {
   const keyFeatures = [
     "Setup Cost: $1,250 + Monthly: $175+",
     "Max 10 clients with advanced features",
+    "Personalized landing page (build your own brand)",
     "Bulk email integration and analytics",
     "Higher priority support and maintenance",
     "All Starter features included",
