@@ -9,33 +9,33 @@ export default function Header() {
 
   const navItems = [
     { name: "Home", href: "/#home" },
-    { name: "About", href: "/#about" },
     { name: "Packages", href: "/#packages" },
-    { name: "Testimonials", href: "/#testimonials" },
     { name: "Portfolio", href: "/#portfolio" },
+    { name: "Testimonials", href: "/#testimonials" },
+    { name: "About", href: "/#about" },
     { name: "Contact", href: "/#contact" },
     { name: "Status", href: "/status" },
   ];
 
   const scrollToSection = (href: string) => {
-    if (href.startsWith('/#')) {
+    if (href.startsWith("/#")) {
       const id = href.substring(2); // Remove '/#'
-      
+
       // If we're not on the homepage, navigate there first
-      if (window.location.pathname !== '/') {
+      if (window.location.pathname !== "/") {
         window.location.href = href;
         return;
       }
-      
+
       // If we're already on the homepage, scroll to the section
       const element = document.getElementById(id);
       if (element) {
-        element.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
         });
       }
-    } else if (href.startsWith('/')) {
+    } else if (href.startsWith("/")) {
       // For non-anchor links like /status
       window.location.href = href;
     }

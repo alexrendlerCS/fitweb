@@ -9,32 +9,38 @@ const demoSections = [
   {
     title: "Client Dashboard",
     image: "/demo-dashboard.png",
-    description: "A central hub for your clients to view their schedule, progress, and important updates."
+    description:
+      "A central hub for your clients to view their schedule, progress, and important updates.",
   },
   {
     title: "Analytics Page",
     image: "/demo-analytics.png",
-    description: "Track client engagement, revenue, and business growth with easy-to-read analytics."
+    description:
+      "Track client engagement, revenue, and business growth with easy-to-read analytics.",
   },
   {
     title: "Scheduling Page (Google Calendar Integration)",
     image: "/demo-scheduling.png",
-    description: "Seamlessly manage sessions and sync with Google Calendar for real-time updates."
+    description:
+      "Seamlessly manage sessions and sync with Google Calendar for real-time updates.",
   },
   {
     title: "Book Session Page",
     image: "/demo-book-session.png",
-    description: "Clients can easily select a workout type, book sessions, view availability, and receive reminders."
+    description:
+      "Clients can easily select a workout type, book sessions, view availability, and receive reminders.",
   },
   {
     title: "Packages Page",
     image: "/demo-packages.png",
-    description: "Showcase your service packages and allow clients to purchase or upgrade with ease."
+    description:
+      "Showcase your service packages and allow clients to purchase or upgrade with ease.",
   },
   {
     title: "Email Integration",
     image: "/demo-email.png",
-    description: "Send automated email reminders to clients for upcoming bookings and cancellations, ensuring everyone stays informed."
+    description:
+      "Send automated email reminders to clients for upcoming bookings and cancellations, ensuring everyone stays informed.",
   },
   // Add more sections as needed
 ];
@@ -43,28 +49,46 @@ export default function DemoClientDashboardPage() {
   const [modalImage, setModalImage] = useState<string | null>(null);
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       <Header />
       <main className="flex-1 pt-20 pb-16">
         <div className="container mx-auto px-4">
           <div className="mb-8 flex items-center">
-            <Link href="/#home" className="inline-flex items-center text-white hover:text-[#004d40] font-semibold text-lg">
+            <Link
+              href="/#home"
+              className="inline-flex items-center text-white hover:text-[#004d40] font-semibold text-lg"
+            >
               <ArrowLeft className="mr-2 h-5 w-5" />
               Back to Homepage
             </Link>
           </div>
-          <h1 className="text-4xl font-bold mb-2 text-center">Coach Kilday's Platform</h1>
-          <p className="text-lg text-gray-300 mb-6 text-center">Explore the features and user experience of a real client platform.</p>
-          
+          <h1 className="text-4xl font-bold mb-2 text-center">
+            Coach Kilday's Platform
+          </h1>
+          <p className="text-lg text-gray-300 mb-6 text-center">
+            Explore the features and user experience of a real client platform.
+          </p>
+
           <div className="text-center mb-10">
-            <a 
-              href="https://coachkilday.com" 
-              target="_blank" 
+            <a
+              href="https://coachkilday.com"
+              target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center px-6 py-3 bg-[#004d40] hover:bg-[#00695c] text-white font-semibold rounded-lg transition-colors duration-300 shadow-lg hover:shadow-xl"
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
               </svg>
               Visit Live Platform
             </a>
@@ -73,7 +97,7 @@ export default function DemoClientDashboardPage() {
             {demoSections.map((section, idx) => (
               <div
                 key={idx}
-                className="bg-gray-800 border border-gray-700 rounded-2xl shadow-xl p-6 flex flex-col items-center transition-transform duration-300 hover:scale-105 hover:shadow-2xl min-h-[420px]"
+                className="bg-black border border-gray-700 rounded-2xl shadow-xl p-6 flex flex-col items-center transition-transform duration-300 hover:scale-105 hover:shadow-2xl min-h-[420px]"
               >
                 <div
                   className="w-full h-80 bg-gray-900 rounded-lg mb-4 overflow-hidden relative cursor-pointer border border-gray-700 shadow-md hover:shadow-lg transition-all duration-200"
@@ -86,11 +110,17 @@ export default function DemoClientDashboardPage() {
                       className="object-cover h-full w-full rounded-lg"
                     />
                   ) : (
-                    <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-lg font-semibold">Image Placeholder</span>
+                    <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-lg font-semibold">
+                      Image Placeholder
+                    </span>
                   )}
                 </div>
-                <h2 className="text-2xl font-bold mb-2 text-center text-white">{section.title}</h2>
-                <p className="text-gray-300 text-center text-base">{section.description}</p>
+                <h2 className="text-2xl font-bold mb-2 text-center text-white">
+                  {section.title}
+                </h2>
+                <p className="text-gray-300 text-center text-base">
+                  {section.description}
+                </p>
               </div>
             ))}
           </div>
@@ -101,12 +131,17 @@ export default function DemoClientDashboardPage() {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
             onClick={() => setModalImage(null)}
             tabIndex={-1}
-            onKeyDown={e => { if (e.key === 'Escape') setModalImage(null); }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setModalImage(null);
+            }}
           >
             <div className="relative">
               <button
                 className="absolute top-4 right-4 bg-black/80 hover:bg-black text-white rounded-full p-2 z-10 border border-white shadow-lg"
-                onClick={e => { e.stopPropagation(); setModalImage(null); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setModalImage(null);
+                }}
                 aria-label="Close full image"
               >
                 <X className="h-6 w-6" />
@@ -115,7 +150,7 @@ export default function DemoClientDashboardPage() {
                 src={modalImage}
                 alt="Full size demo screenshot"
                 className="max-h-[90vh] max-w-[90vw] rounded-lg shadow-2xl border-4 border-white"
-                onClick={e => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
               />
             </div>
           </div>
@@ -124,4 +159,4 @@ export default function DemoClientDashboardPage() {
       <Footer />
     </div>
   );
-} 
+}
